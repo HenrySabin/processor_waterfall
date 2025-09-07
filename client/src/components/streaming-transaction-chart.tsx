@@ -64,7 +64,7 @@ export default function StreamingTransactionChart({ transactions = [] }: Streami
         const count = buckets.get(bucketKey) || 0;
         
         newData.push({
-          time: format(new Date(timeForPosition), 'HH:mm:ss'),
+          time: getFixedTimeLabel(pos),
           timestamp: timeForPosition,
           count,
           position: pos
@@ -88,13 +88,11 @@ export default function StreamingTransactionChart({ transactions = [] }: Streami
     };
   }, [transactions]);
 
-  // Custom tick formatter for X-axis (fixed time labels)
-  const formatXAxisTick = (tickItem: any, index: number) => {
-    // Show only every 20th tick to avoid crowding
-    if (index % 20 === 0) {
-      const timeAtPosition = currentTime - ((tickItem * WINDOW_SIZE * 1000) / TOTAL_POSITIONS);
-      return format(new Date(timeAtPosition), 'HH:mm:ss');
-    }
+  // Fixed time labels - these never change
+  const getFixedTimeLabel = (position: number) => {
+    const secondsAgo = (position * WINDOW_SIZE) / TOTAL_POSITIONS;
+    if (position === 0) return 'Now';
+    if (secondsAgo % 15 === 0) return `${Math.round(secondsAgo)}s ago`;
     return '';
   };
 
@@ -142,7 +140,7 @@ export default function StreamingTransactionChart({ transactions = [] }: Streami
             type="number"
             scale="linear"
             domain={[0, TOTAL_POSITIONS]}
-            tickFormatter={formatXAxisTick}
+            tickFormatter={getFixedTimeLabel}
             interval={0}
             axisLine={true}
             tickLine={true}
