@@ -13,11 +13,26 @@ export default function RechartsTransactionChart({ transactions = [] }: Recharts
   useEffect(() => {
     const now = Date.now();
     const timeLabels = [
-      { label: "2s ago", rangeStart: 1.5, rangeEnd: 2.5 },
-      { label: "1.5s ago", rangeStart: 1, rangeEnd: 1.5 },
-      { label: "1s ago", rangeStart: 0.5, rangeEnd: 1 },
-      { label: "0.5s ago", rangeStart: 0.2, rangeEnd: 0.5 },
-      { label: "Now", rangeStart: 0, rangeEnd: 0.2 }
+      { label: "10s", rangeStart: 9.5, rangeEnd: 10 },
+      { label: "9.5s", rangeStart: 9, rangeEnd: 9.5 },
+      { label: "9s", rangeStart: 8.5, rangeEnd: 9 },
+      { label: "8.5s", rangeStart: 8, rangeEnd: 8.5 },
+      { label: "8s", rangeStart: 7.5, rangeEnd: 8 },
+      { label: "7.5s", rangeStart: 7, rangeEnd: 7.5 },
+      { label: "7s", rangeStart: 6.5, rangeEnd: 7 },
+      { label: "6.5s", rangeStart: 6, rangeEnd: 6.5 },
+      { label: "6s", rangeStart: 5.5, rangeEnd: 6 },
+      { label: "5.5s", rangeStart: 5, rangeEnd: 5.5 },
+      { label: "5s", rangeStart: 4.5, rangeEnd: 5 },
+      { label: "4.5s", rangeStart: 4, rangeEnd: 4.5 },
+      { label: "4s", rangeStart: 3.5, rangeEnd: 4 },
+      { label: "3.5s", rangeStart: 3, rangeEnd: 3.5 },
+      { label: "3s", rangeStart: 2.5, rangeEnd: 3 },
+      { label: "2.5s", rangeStart: 2, rangeEnd: 2.5 },
+      { label: "2s", rangeStart: 1.5, rangeEnd: 2 },
+      { label: "1.5s", rangeStart: 1, rangeEnd: 1.5 },
+      { label: "1s", rangeStart: 0.5, rangeEnd: 1 },
+      { label: "0.5s", rangeStart: 0, rangeEnd: 0.5 }
     ];
     
     // Count transactions in each time bucket
