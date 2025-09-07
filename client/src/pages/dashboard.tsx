@@ -367,11 +367,10 @@ export default function Dashboard() {
           </Layout.Section>
           
           <Layout.Section>
-            <RecentTransactions />
-          </Layout.Section>
-          
-          <Layout.Section>
-            <ProcessorStatus processors={wsData.metrics?.processors || []} />
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+              <ProcessorStatus processors={wsData.metrics?.processors || []} />
+              <RecentTransactions />
+            </div>
           </Layout.Section>
           
           <Layout.Section>
