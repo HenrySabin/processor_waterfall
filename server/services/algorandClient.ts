@@ -61,19 +61,89 @@ export class AlgorandClient {
   private parseProcessorsFromGlobalState(globalState: any[]): ProcessorPriority[] {
     const processors: ProcessorPriority[] = [];
     
-    // Parse global state entries to extract processor configurations
-    // This would depend on the actual smart contract global state structure
     try {
-      // For now, return default processors since we don't have a deployed contract
-      // In a real implementation, we'd parse the actual global state
+      // Parse the global state entries from our PayFlow smart contract
+      const processorData: Record<number, Partial<ProcessorPriority>> = {};
+      let processorCount = 0;
+      
+      for (const entry of globalState) {
+        const keyBytes = Buffer.from(entry.key, 'base64');
+        const keyStr = keyBytes.toString('utf-8');
+        
+        let value: any;
+        if (entry.value.type === 1) { // bytes
+          const valueBytes = Buffer.from(entry.value.bytes, 'base64');
+          value = valueBytes.toString('utf-8');
+        } else if (entry.value.type === 2) { // uint
+          value = entry.value.uint;
+        } else {
+          continue;
+        }
+        
+        // Parse processor count
+        if (keyStr === 'processor_count') {
+          processorCount = value;
+          continue;
+        }
+        
+        // Parse processor entries: processor_<index>_<field>
+        const match = keyStr.match(/processor_(\d+)_(name|priority|enabled)/);
+        if (match) {
+          const index = parseInt(match[1]);
+          const field = match[2];
+          
+          if (!processorData[index]) {
+            processorData[index] = {};
+          }
+          
+          switch (field) {
+            case 'name':
+              processorData[index].name = value;
+              break;
+            case 'priority':
+              processorData[index].priority = value;
+              break;
+            case 'enabled':
+              processorData[index].enabled = value === 1;
+              break;
+          }
+        }
+      }
+      
+      // Convert parsed data to ProcessorPriority array
+      for (let i = 1; i <= processorCount; i++) {
+        const data = processorData[i];
+        if (data && data.name && data.priority !== undefined && data.enabled !== undefined) {
+          processors.push({
+            processorId: i.toString(),
+            name: data.name,
+            priority: data.priority,
+            enabled: data.enabled
+          });
+        }
+      }
+      
+      logger.debug(`Parsed ${processors.length} processors from contract state`, 'algorand-client', {
+        processorCount,
+        processors: processors.map(p => ({ name: p.name, priority: p.priority, enabled: p.enabled }))
+      });
+      
+      // Return parsed processors or default fallback
+      return processors.length > 0 ? processors : [
+        { processorId: '1', name: 'Stripe', priority: 1, enabled: true },
+        { processorId: '2', name: 'PayPal', priority: 2, enabled: true },
+        { processorId: '3', name: 'Square', priority: 3, enabled: true },
+      ];
+      
+    } catch (error) {
+      logger.error('Failed to parse processor data from global state', 'algorand-client', error instanceof Error ? error : undefined);
+      
+      // Return default processors as fallback
       return [
         { processorId: '1', name: 'Stripe', priority: 1, enabled: true },
         { processorId: '2', name: 'PayPal', priority: 2, enabled: true },
         { processorId: '3', name: 'Square', priority: 3, enabled: true },
       ];
-    } catch (error) {
-      logger.error('Failed to parse processor data from global state', 'algorand-client', error instanceof Error ? error : undefined);
-      return [];
     }
   }
 
