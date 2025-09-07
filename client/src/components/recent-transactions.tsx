@@ -1,9 +1,8 @@
 import { Button } from "@/components/ui/button";
 import type { Transaction } from "@/lib/api";
 import { formatDistanceToNow } from "date-fns";
-import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { api } from "@/lib/api";
+import { useWebSocket } from "@/hooks/useWebSocket";
 
 interface RecentTransactionsProps {}
 
@@ -12,14 +11,11 @@ export default function RecentTransactions({}: RecentTransactionsProps) {
   const itemsPerPage = 10;
   const offset = (currentPage - 1) * itemsPerPage;
 
-  const { data: transactionData, isLoading } = useQuery({
-    queryKey: ['/api/transactions', currentPage],
-    queryFn: () => api.getTransactions(itemsPerPage, offset),
-    refetchInterval: 5000, // Refresh every 5 seconds to show new transactions
-  });
-
-  const transactions = transactionData?.transactions || [];
-  const totalTransactions = transactionData?.pagination?.total || 0;
+  const { data: wsData, isConnected } = useWebSocket();
+  const isLoading = !isConnected;
+  
+  const transactions = wsData.transactions?.transactions || [];
+  const totalTransactions = wsData.transactions?.pagination?.total || 0;
   const totalPages = Math.ceil(totalTransactions / itemsPerPage);
   const getStatusBadgeColor = (status: string) => {
     switch (status) {

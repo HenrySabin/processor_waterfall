@@ -1,7 +1,8 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { Frame, Navigation, TopBar, Loading, Card, Layout, Badge, Button, Text, Toast, Page } from "@shopify/polaris";
 import { useToast } from "@/hooks/use-toast";
+import { useWebSocket } from "@/hooks/useWebSocket";
 import { useState, useCallback, useEffect } from "react";
 import { useLocation } from "wouter";
 import MetricsGrid from "@/components/metrics-grid";
@@ -23,23 +24,18 @@ export default function Dashboard() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
-  const { data: metrics, isLoading } = useQuery({
-    queryKey: ['/api/metrics'],
-    refetchInterval: 30000,
-  });
-
-  const { data: health } = useQuery({
-    queryKey: ['/api/health'],
-    refetchInterval: 30000,
-  });
+  // Replace HTTP polling with WebSocket
+  const { data: wsData, isConnected, error: wsError } = useWebSocket();
+  
+  // Use WebSocket data instead of HTTP requests
+  const metrics = wsData.metrics;
+  const health = wsData.health;
+  const isLoading = !isConnected;
 
   const refreshMutation = useMutation({
     mutationFn: async () => {
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ['/api/metrics'] }),
-        queryClient.invalidateQueries({ queryKey: ['/api/health'] }),
-        queryClient.invalidateQueries({ queryKey: ['/api/processors'] }),
-      ]);
+      // WebSocket automatically refreshes, no need for manual refresh
+      return Promise.resolve();
     },
     onSuccess: () => {
       setToastMessage('Dashboard refreshed successfully!');
@@ -192,11 +188,7 @@ export default function Dashboard() {
             metadata: { auto: true, customer, product }
           });
           
-          // Only invalidate on last transaction to reduce overhead
-          if (i === transactionCount - 1) {
-            queryClient.invalidateQueries({ queryKey: ['/api/metrics'] });
-            queryClient.invalidateQueries({ queryKey: ['/api/transactions'] });
-          }
+          // WebSocket will automatically broadcast updates - no manual invalidation needed
         } catch (error) {
           // Silent fail for auto-generated transactions
         }

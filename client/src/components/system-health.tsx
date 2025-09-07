@@ -32,7 +32,7 @@ export default function SystemHealth({ health }: SystemHealthProps) {
   });
 
   const getHealthStatus = (status: string) => {
-    switch (status.toLowerCase()) {
+    switch (status?.toLowerCase?.() || '') {
       case 'healthy':
       case 'connected':
       case 'active':
