@@ -94,7 +94,7 @@ def approval_program():
         
         # Update processor priority: args[0] = "update_priority", args[1] = index, args[2] = priority
         [And(
-            Txn.on_completion() == OnCall.NoOp,
+            Txn.on_completion() == OnComplete.NoOp,
             Txn.application_args[0] == Bytes("update_priority"),
             Global.latest_timestamp() < Int(2000000000)  # Simple expiry check
         ), Seq([
@@ -104,7 +104,7 @@ def approval_program():
         
         # Toggle processor enabled status: args[0] = "toggle", args[1] = index, args[2] = enabled (0/1)
         [And(
-            Txn.on_completion() == OnCall.NoOp,
+            Txn.on_completion() == OnComplete.NoOp,
             Txn.application_args[0] == Bytes("toggle"),
             Global.latest_timestamp() < Int(2000000000)
         ), Seq([
@@ -113,7 +113,7 @@ def approval_program():
         ])],
         
         # Read-only operations (NoOp without args) - always approve
-        [Txn.on_completion() == OnCall.NoOp, Approve()],
+        [Txn.on_completion() == OnComplete.NoOp, Approve()],
         
         # Reject all other operations
         [Int(1), Reject()]
