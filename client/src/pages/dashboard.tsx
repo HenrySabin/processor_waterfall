@@ -195,6 +195,7 @@ export default function Dashboard() {
           // Only invalidate on last transaction to reduce overhead
           if (i === transactionCount - 1) {
             queryClient.invalidateQueries({ queryKey: ['/api/metrics'] });
+            queryClient.invalidateQueries({ queryKey: ['/api/transactions'] });
           }
         } catch (error) {
           // Silent fail for auto-generated transactions

@@ -31,16 +31,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     credentials: true,
   }));
 
-  // Apply rate limiting to all API routes (but skip for monitoring endpoints)
-  app.use('/api', (req, res, next) => {
-    // Skip rate limiting for monitoring endpoints that need to work during demos
-    const skipPaths = ['/metrics', '/health', '/transactions', '/health-check'];
-    if (skipPaths.some(path => req.path === path)) {
-      next();
-      return;
-    }
-    apiRateLimiter.middleware(req, res, next);
-  });
+  // Rate limiting disabled for unlimited transactions
+  // app.use('/api', apiRateLimiter.middleware);
 
   // Health check endpoint (no auth required)
   app.get('/api/health', async (req, res) => {
