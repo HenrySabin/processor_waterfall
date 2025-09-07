@@ -166,7 +166,7 @@ export default function Dashboard() {
           </Layout.Section>
           
           <Layout.Section>
-            <RecentTransactions transactions={metrics?.recentTransactions || []} />
+            <RecentTransactions />
           </Layout.Section>
           
           <Layout.Section>

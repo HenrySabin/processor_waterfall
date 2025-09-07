@@ -1,12 +1,26 @@
 import { Button } from "@/components/ui/button";
 import type { Transaction } from "@/lib/api";
 import { formatDistanceToNow } from "date-fns";
+import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+import { api } from "@/lib/api";
 
-interface RecentTransactionsProps {
-  transactions?: Transaction[];
-}
+interface RecentTransactionsProps {}
 
-export default function RecentTransactions({ transactions }: RecentTransactionsProps) {
+export default function RecentTransactions({}: RecentTransactionsProps) {
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+  const offset = (currentPage - 1) * itemsPerPage;
+
+  const { data: transactionData, isLoading } = useQuery({
+    queryKey: ['/api/transactions', currentPage],
+    queryFn: () => api.getTransactions(itemsPerPage, offset),
+    refetchInterval: 5000, // Refresh every 5 seconds to show new transactions
+  });
+
+  const transactions = transactionData?.transactions || [];
+  const totalTransactions = transactionData?.pagination?.total || 0;
+  const totalPages = Math.ceil(totalTransactions / itemsPerPage);
   const getStatusBadgeColor = (status: string) => {
     switch (status) {
       case 'success':
@@ -28,7 +42,7 @@ export default function RecentTransactions({ transactions }: RecentTransactionsP
     }
   };
 
-  if (!transactions) {
+  if (isLoading && transactions.length === 0) {
     return (
       <div className="lg:col-span-2 bg-card p-6 rounded-lg shadow-sm border border-border">
         <div className="flex justify-between items-center mb-4">
@@ -105,6 +119,38 @@ export default function RecentTransactions({ transactions }: RecentTransactionsP
             )}
           </tbody>
         </table>
+      </div>
+      
+      {/* Pagination Controls */}
+      <div className="flex justify-between items-center mt-4 pt-4 border-t border-border">
+        <div className="text-sm text-muted-foreground">
+          Showing {transactions.length === 0 ? 0 : ((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, totalTransactions)} of {totalTransactions} transactions
+        </div>
+        <div className="flex items-center space-x-2">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+            disabled={currentPage <= 1}
+            data-testid="button-previous-page"
+          >
+            <i className="fas fa-chevron-left mr-1"></i>
+            Previous
+          </Button>
+          <span className="text-sm text-muted-foreground px-2">
+            Page {currentPage} of {totalPages || 1}
+          </span>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => setCurrentPage(prev => prev + 1)}
+            disabled={currentPage >= totalPages}
+            data-testid="button-next-page"
+          >
+            Next
+            <i className="fas fa-chevron-right ml-1"></i>
+          </Button>
+        </div>
       </div>
     </div>
   );
