@@ -1,13 +1,17 @@
 import { useEffect, useRef, useState } from "react";
 import type { Transaction } from "@/lib/api";
-import { format, subHours, eachHourOfInterval } from "date-fns";
+import { format, subHours, subDays, eachHourOfInterval, eachDayOfInterval } from "date-fns";
+import { Button } from "@/components/ui/button";
 
 interface TransactionChartProps {
   transactions?: Transaction[];
 }
 
+type TimePeriod = 'realtime' | '24h' | '1month';
+
 export default function TransactionChart({ transactions }: TransactionChartProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [timePeriod, setTimePeriod] = useState<TimePeriod>('24h');
   const [tooltip, setTooltip] = useState<{
     visible: boolean;
     x: number;
@@ -31,37 +35,104 @@ export default function TransactionChart({ transactions }: TransactionChartProps
     canvas.style.width = rect.width + 'px';
     canvas.style.height = rect.height + 'px';
 
-    // Generate hourly data for the last 12 hours
+    // Generate data based on time period
     const now = new Date();
-    const startTime = subHours(now, 12);
-    const hourlySlots = eachHourOfInterval({ start: startTime, end: now });
+    let chartData: any[] = [];
 
-    const chartData = hourlySlots.map(hour => {
-      const nextHour = new Date(hour.getTime() + 60 * 60 * 1000);
+    if (timePeriod === 'realtime') {
+      // Last 2 hours with 10-minute intervals
+      const startTime = subHours(now, 2);
+      const intervals = [];
+      for (let i = 0; i < 12; i++) {
+        intervals.push(new Date(startTime.getTime() + i * 10 * 60 * 1000));
+      }
       
-      // Find transactions in this hour
-      const hourTransactions = transactions.filter(t => {
-        const transactionTime = new Date(t.createdAt);
-        return transactionTime >= hour && transactionTime < nextHour;
+      chartData = intervals.map(interval => {
+        const nextInterval = new Date(interval.getTime() + 10 * 60 * 1000);
+        
+        const intervalTransactions = transactions.filter(t => {
+          const transactionTime = new Date(t.createdAt);
+          return transactionTime >= interval && transactionTime < nextInterval;
+        });
+
+        const successful = intervalTransactions.filter(t => t.status === 'success').length;
+        const failed = intervalTransactions.filter(t => t.status === 'failed').length;
+        const total = intervalTransactions.length;
+        
+        const totalVolume = intervalTransactions.reduce((sum, t) => {
+          return sum + parseFloat(t.amount);
+        }, 0);
+
+        return {
+          time: format(interval, 'HH:mm'),
+          total,
+          successful,
+          failed,
+          volume: Math.round(totalVolume * 100) / 100,
+          displayTime: format(interval, 'MMM d, HH:mm'),
+        };
       });
+    } else if (timePeriod === '24h') {
+      // Last 24 hours with hourly intervals
+      const startTime = subHours(now, 24);
+      const hourlySlots = eachHourOfInterval({ start: startTime, end: now });
 
-      const successful = hourTransactions.filter(t => t.status === 'success').length;
-      const failed = hourTransactions.filter(t => t.status === 'failed').length;
-      const total = hourTransactions.length;
-      
-      const totalVolume = hourTransactions.reduce((sum, t) => {
-        return sum + parseFloat(t.amount);
-      }, 0);
+      chartData = hourlySlots.map(hour => {
+        const nextHour = new Date(hour.getTime() + 60 * 60 * 1000);
+        
+        const hourTransactions = transactions.filter(t => {
+          const transactionTime = new Date(t.createdAt);
+          return transactionTime >= hour && transactionTime < nextHour;
+        });
 
-      return {
-        time: format(hour, 'HH:mm'),
-        total,
-        successful,
-        failed,
-        volume: Math.round(totalVolume * 100) / 100,
-        displayTime: format(hour, 'MMM d, HH:mm'),
-      };
-    });
+        const successful = hourTransactions.filter(t => t.status === 'success').length;
+        const failed = hourTransactions.filter(t => t.status === 'failed').length;
+        const total = hourTransactions.length;
+        
+        const totalVolume = hourTransactions.reduce((sum, t) => {
+          return sum + parseFloat(t.amount);
+        }, 0);
+
+        return {
+          time: format(hour, 'HH:mm'),
+          total,
+          successful,
+          failed,
+          volume: Math.round(totalVolume * 100) / 100,
+          displayTime: format(hour, 'MMM d, HH:mm'),
+        };
+      });
+    } else if (timePeriod === '1month') {
+      // Last 30 days with daily intervals
+      const startTime = subDays(now, 30);
+      const dailySlots = eachDayOfInterval({ start: startTime, end: now });
+
+      chartData = dailySlots.map(day => {
+        const nextDay = new Date(day.getTime() + 24 * 60 * 60 * 1000);
+        
+        const dayTransactions = transactions.filter(t => {
+          const transactionTime = new Date(t.createdAt);
+          return transactionTime >= day && transactionTime < nextDay;
+        });
+
+        const successful = dayTransactions.filter(t => t.status === 'success').length;
+        const failed = dayTransactions.filter(t => t.status === 'failed').length;
+        const total = dayTransactions.length;
+        
+        const totalVolume = dayTransactions.reduce((sum, t) => {
+          return sum + parseFloat(t.amount);
+        }, 0);
+
+        return {
+          time: format(day, 'MMM d'),
+          total,
+          successful,
+          failed,
+          volume: Math.round(totalVolume * 100) / 100,
+          displayTime: format(day, 'MMM d, yyyy'),
+        };
+      });
+    }
 
     // Chart dimensions
     const padding = { top: 20, right: 30, bottom: 40, left: 40 };
@@ -204,7 +275,19 @@ export default function TransactionChart({ transactions }: TransactionChartProps
       }
     });
 
-  }, [transactions]);
+  }, [transactions, timePeriod]);
+
+  // Auto-refresh for real-time view
+  useEffect(() => {
+    if (timePeriod === 'realtime') {
+      const interval = setInterval(() => {
+        // Trigger re-render by updating a dummy state
+        setTooltip(prev => ({ ...prev }));
+      }, 30000); // Refresh every 30 seconds
+
+      return () => clearInterval(interval);
+    }
+  }, [timePeriod]);
 
   if (!transactions) {
     return (
@@ -225,8 +308,52 @@ export default function TransactionChart({ transactions }: TransactionChartProps
     );
   }
 
+  const getTimePeriodLabel = () => {
+    switch (timePeriod) {
+      case 'realtime': return 'Real Time (Last 2h)';
+      case '24h': return '24 Hours';
+      case '1month': return '1 Month';
+      default: return '24 Hours';
+    }
+  };
+
   return (
     <div style={{ position: 'relative', height: '200px' }} data-testid="transaction-chart">
+      {/* Time Period Controls */}
+      <div style={{ 
+        position: 'absolute', 
+        top: '0px', 
+        right: '0px', 
+        display: 'flex', 
+        gap: '4px',
+        zIndex: 10
+      }}>
+        <Button
+          variant={timePeriod === 'realtime' ? 'default' : 'outline'}
+          size="sm"
+          onClick={() => setTimePeriod('realtime')}
+          data-testid="button-chart-realtime"
+        >
+          Real Time
+        </Button>
+        <Button
+          variant={timePeriod === '24h' ? 'default' : 'outline'}
+          size="sm"
+          onClick={() => setTimePeriod('24h')}
+          data-testid="button-chart-24h"
+        >
+          24hrs
+        </Button>
+        <Button
+          variant={timePeriod === '1month' ? 'default' : 'outline'}
+          size="sm"
+          onClick={() => setTimePeriod('1month')}
+          data-testid="button-chart-1month"
+        >
+          1 Month
+        </Button>
+      </div>
+      
       <canvas
         ref={canvasRef}
         style={{
