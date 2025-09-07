@@ -74,9 +74,6 @@ export default function ProcessorStatus({ processors }: ProcessorStatusProps) {
       />
       <Text variant="bodyMd" as="span" fontWeight="semibold">{processor.name}</Text>
     </div>,
-    <Badge tone={getStatusTone(processor) as any} key={`status-${processor.id}`}>
-      {getStatusText(processor)}
-    </Badge>,
     <Text variant="bodyMd" as="span" key={`priority-${processor.id}`}>
       {processor.priority}
     </Text>,
@@ -96,7 +93,6 @@ export default function ProcessorStatus({ processors }: ProcessorStatusProps) {
 
   const headings = [
     'Processor',
-    'Status',
     'Priority',
     'Success Rate',
     'Actions',
@@ -123,7 +119,7 @@ export default function ProcessorStatus({ processors }: ProcessorStatusProps) {
           </div>
           
           <DataTable
-            columnContentTypes={['text', 'text', 'text', 'text', 'text']}
+            columnContentTypes={['text', 'text', 'text', 'text']}
             headings={headings}
             rows={rows}
             footerContent={
