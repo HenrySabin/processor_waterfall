@@ -11,6 +11,7 @@ import RecentTransactions from "@/components/recent-transactions";
 import SystemHealth from "@/components/system-health";
 import QuickActions from "@/components/quick-actions";
 import RechartsTransactionChart from "@/components/recharts-transaction-chart";
+import flowPayLogo from "@assets/flowpay logo_1757253025832.png";
 
 export default function Dashboard() {
   const [location, setLocation] = useLocation();
@@ -266,6 +267,24 @@ export default function Dashboard() {
 
   const navigationMarkup = (
     <Navigation location={location}>
+      <div style={{ 
+        padding: '20px 16px', 
+        borderBottom: '1px solid #e1e3e5',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
+      }}>
+        <img 
+          src={flowPayLogo} 
+          alt="FlowPay" 
+          style={{ 
+            height: '80px',
+            width: 'auto',
+            objectFit: 'contain'
+          }}
+          data-testid="flowpay-logo"
+        />
+      </div>
       <Navigation.Section
         items={[
           {
