@@ -11,6 +11,7 @@ interface ProcessorStatusProps {
 export default function ProcessorStatus({ processors }: ProcessorStatusProps) {
   const [toastActive, setToastActive] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
+  const [showAll, setShowAll] = useState(false);
   const queryClient = useQueryClient();
 
   const toggleToastActive = useCallback(() => setToastActive((active) => !active), []);
@@ -49,14 +50,16 @@ export default function ProcessorStatus({ processors }: ProcessorStatusProps) {
         <div style={{ padding: '16px' }}>
           <Text variant="headingMd" as="h3">Processor Status</Text>
           <div style={{ marginTop: '16px' }}>
-            <Text variant="bodyMd" tone="subdued">Loading processor status...</Text>
+            <Text variant="bodyMd" as="p" tone="subdued">Loading processor status...</Text>
           </div>
         </div>
       </Card>
     );
   }
 
-  const rows = processors.map((processor) => [
+  const displayedProcessors = showAll ? processors : processors.slice(0, 10);
+  
+  const rows = displayedProcessors.map((processor) => [
     <div key={`name-${processor.id}`} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
       <div 
         style={{
@@ -109,9 +112,14 @@ export default function ProcessorStatus({ processors }: ProcessorStatusProps) {
         <div style={{ padding: '16px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
             <Text variant="headingMd" as="h3">Processor Status</Text>
-            <Button size="slim" tone="subdued">
-              View All
-            </Button>
+            {processors.length > 10 && (
+              <Button 
+                size="slim" 
+                onClick={() => setShowAll(!showAll)}
+              >
+                {showAll ? 'Show Less' : `Show More (${processors.length - 10} hidden)`}
+              </Button>
+            )}
           </div>
           
           <DataTable
@@ -119,8 +127,8 @@ export default function ProcessorStatus({ processors }: ProcessorStatusProps) {
             headings={headings}
             rows={rows}
             footerContent={
-              <Text variant="bodySm" tone="subdued">
-                Showing {processors.length} payment processors
+              <Text variant="bodySm" as="p" tone="subdued">
+                Showing {displayedProcessors.length} of {processors.length} payment processors
               </Text>
             }
           />
