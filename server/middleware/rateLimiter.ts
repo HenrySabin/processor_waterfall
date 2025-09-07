@@ -50,6 +50,12 @@ export class RateLimiter {
     const key = this.getKey(req);
     const now = Date.now();
 
+    // Skip rate limiting for demo requests
+    if (req.body && req.body.metadata && req.body.metadata.demo === true) {
+      next();
+      return;
+    }
+
     // Get or create rate limit entry
     if (!this.store[key] || this.store[key].resetTime <= now) {
       this.store[key] = {
