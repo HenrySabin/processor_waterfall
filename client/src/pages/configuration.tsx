@@ -58,10 +58,12 @@ export default function Configuration() {
   });
 
   // Fetch processor priorities from smart contract
-  const { data: processors, isLoading: processorsLoading } = useQuery({
+  const { data: processorsResponse, isLoading: processorsLoading } = useQuery({
     queryKey: ['/api/smart-contract/priorities'],
     refetchInterval: 5000, // Refresh every 5 seconds
   });
+
+  const processors = processorsResponse?.priorities || [];
 
   // Update processor mutation
   const updateProcessorMutation = useMutation({
@@ -177,34 +179,52 @@ export default function Configuration() {
                   <InlineStack gap="200" align="center">
                     <Text as="span">Connection Status:</Text>
                     <Badge 
-                      tone={(contractStatus as any)?.smartContract?.connected ? "success" : "critical"}
+                      tone={contractStatus?.connected ? "success" : "critical"}
                       data-testid="badge-connection-status"
                     >
-                      {(contractStatus as any)?.smartContract?.connected ? "Connected" : "Disconnected"}
+                      {contractStatus?.connected ? "Connected" : "Disconnected"}
                     </Badge>
                   </InlineStack>
                   
                   <InlineStack gap="200" align="center">
                     <Text as="span">Network:</Text>
                     <Badge tone="info" data-testid="badge-network">
-                      {(contractStatus as any)?.smartContract?.network || "Unknown"}
+                      {contractStatus?.network || "Unknown"}
                     </Badge>
                   </InlineStack>
                   
-                  {(contractStatus as any)?.smartContract?.appId && (
+                  {contractStatus?.appId && (
                     <InlineStack gap="200" align="center">
                       <Text as="span">Application ID:</Text>
                       <Text as="span" fontWeight="bold" data-testid="text-app-id">
-                        {(contractStatus as any).smartContract.appId}
+                        {contractStatus.appId}
                       </Text>
                     </InlineStack>
                   )}
                   
-                  {(contractStatus as any)?.timestamp && (
+                  {contractStatus?.lastRound && (
                     <InlineStack gap="200" align="center">
-                      <Text as="span">Last Sync:</Text>
+                      <Text as="span">Current Round:</Text>
                       <Text as="span" data-testid="text-last-sync">
-                        {new Date((contractStatus as any).timestamp).toLocaleString()}
+                        {contractStatus.lastRound.toLocaleString()}
+                      </Text>
+                    </InlineStack>
+                  )}
+                  
+                  {contractStatus?.nodeVersion && (
+                    <InlineStack gap="200" align="center">
+                      <Text as="span">Node Version:</Text>
+                      <Text as="span" data-testid="text-node-version">
+                        {contractStatus.nodeVersion}
+                      </Text>
+                    </InlineStack>
+                  )}
+                  
+                  {contractStatus?.error && (
+                    <InlineStack gap="200" align="center">
+                      <Text as="span">Error:</Text>
+                      <Text as="span" tone="critical" data-testid="text-error">
+                        {contractStatus.error}
                       </Text>
                     </InlineStack>
                   )}
@@ -215,7 +235,7 @@ export default function Configuration() {
               <Divider />
               <br />
               
-              {!(contractStatus as any)?.smartContract?.connected && (
+              {!contractStatus?.appId && (
                 <>
                   <Banner tone="warning" title="Smart Contract Not Deployed">
                     <p>The smart contract is running in demo mode. Deploy to Algorand network for live blockchain integration.</p>
@@ -278,37 +298,55 @@ export default function Configuration() {
         <Layout.Section>
           <Card>
             <div style={{ padding: '20px' }}>
-              <Text variant="headingMd" as="h2">Blockchain Details</Text>
+              <Text variant="headingMd" as="h2">Live Blockchain Data</Text>
               <br />
               
-              {(contractStatus as any)?.system && (
+              {contractStatus?.connected && (
                 <BlockStack gap="200">
+                  {contractStatus.lastRound && (
+                    <InlineStack gap="200" align="center">
+                      <Text as="span">Current Round:</Text>
+                      <Text as="span" fontWeight="bold" data-testid="text-blockchain-round">
+                        {contractStatus.lastRound.toLocaleString()}
+                      </Text>
+                    </InlineStack>
+                  )}
+                  
                   <InlineStack gap="200" align="center">
-                    <Text as="span">Uptime:</Text>
-                    <Text as="span" fontWeight="bold" data-testid="text-current-round">
-                      {Math.floor((contractStatus as any).system.uptime / 60)} minutes
+                    <Text as="span">Network:</Text>
+                    <Text as="span" data-testid="text-blockchain-network">
+                      {contractStatus.network.toUpperCase()}
                     </Text>
                   </InlineStack>
                   
-                  <InlineStack gap="200" align="center">
-                    <Text as="span">API Status:</Text>
-                    <Text as="span" data-testid="text-node-version">
-                      {(contractStatus as any).system.api || "N/A"}
-                    </Text>
-                  </InlineStack>
+                  {contractStatus.appId ? (
+                    <InlineStack gap="200" align="center">
+                      <Text as="span">Contract Status:</Text>
+                      <Badge tone="success" data-testid="badge-contract-deployed">
+                        Deployed & Active
+                      </Badge>
+                    </InlineStack>
+                  ) : (
+                    <InlineStack gap="200" align="center">
+                      <Text as="span">Contract Status:</Text>
+                      <Badge tone="warning" data-testid="badge-contract-demo">
+                        Demo Mode
+                      </Badge>
+                    </InlineStack>
+                  )}
                   
                   <InlineStack gap="200" align="center">
-                    <Text as="span">Database:</Text>
-                    <Text as="span" data-testid="text-genesis-id">
-                      {(contractStatus as any).system.database || "N/A"}
+                    <Text as="span">Processors Configured:</Text>
+                    <Text as="span" fontWeight="bold" data-testid="text-processors-count">
+                      {processors.length}
                     </Text>
                   </InlineStack>
                 </BlockStack>
               )}
               
-              {!(contractStatus as any)?.system && (
+              {!contractStatus?.connected && (
                 <Text as="p" tone="subdued">
-                  Blockchain node details will appear here when connected to live network.
+                  Connect to Algorand network to view live blockchain data.
                 </Text>
               )}
             </div>
