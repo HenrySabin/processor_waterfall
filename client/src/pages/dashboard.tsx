@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { Frame, Navigation, TopBar, Loading, Card, Layout, Badge, Button, Text, Toast, Page } from "@shopify/polaris";
 import { useToast } from "@/hooks/use-toast";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useLocation } from "wouter";
 import MetricsGrid from "@/components/metrics-grid";
 import ProcessorStatus from "@/components/processor-status";
@@ -18,6 +18,8 @@ export default function Dashboard() {
   const [toastMessage, setToastMessage] = useState('');
   const [demoRunning, setDemoRunning] = useState(false);
   const [demoProgress, setDemoProgress] = useState({ current: 0, total: 100 });
+  const [autoMode, setAutoMode] = useState(false);
+  const [autoInterval, setAutoInterval] = useState<NodeJS.Timeout | null>(null);
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
@@ -160,6 +162,81 @@ export default function Dashboard() {
     }
   };
 
+  // Automated transaction generation
+  const generateRandomTransactions = async () => {
+    const transactionCount = Math.floor(Math.random() * 16) + 5; // 5-20 transactions
+    
+    const customers = [
+      "Alice Johnson", "Bob Smith", "Carol Davis", "David Wilson", "Eva Brown",
+      "Frank Miller", "Grace Lee", "Henry Chang", "Ivy Martinez", "Jack Thompson",
+      "Kelly Anderson", "Liam Rodriguez", "Maya Patel", "Nathan Kim", "Olivia Green",
+      "Paul Walker", "Quinn Taylor", "Rachel White", "Sam Johnson", "Tina Liu"
+    ];
+    
+    const products = [
+      "Premium Plan", "Enterprise License", "Monthly Subscription", "Basic Plan", "Yearly Premium",
+      "Pro Tools", "Monthly Pro", "Team License", "Standard Plan", "Annual Pro"
+    ];
+
+    // Generate transactions with random timing within 5 seconds
+    for (let i = 0; i < transactionCount; i++) {
+      const delay = Math.random() * 5000; // Random delay 0-5 seconds
+      
+      setTimeout(async () => {
+        const amount = (Math.random() * 800 + 15).toFixed(2);
+        const customer = customers[Math.floor(Math.random() * customers.length)];
+        const product = products[Math.floor(Math.random() * products.length)];
+        
+        try {
+          await api.processPayment({
+            amount,
+            currency: "USD",
+            metadata: { auto: true, customer, product }
+          });
+          
+          // Invalidate queries to refresh the UI
+          queryClient.invalidateQueries({ queryKey: ['/api/metrics'] });
+          queryClient.invalidateQueries({ queryKey: ['/api/health'] });
+        } catch (error) {
+          // Silent fail for auto-generated transactions
+        }
+      }, delay);
+    }
+  };
+
+  const startAutoMode = () => {
+    if (autoInterval) clearInterval(autoInterval);
+    
+    setAutoMode(true);
+    
+    // Generate initial batch immediately
+    generateRandomTransactions();
+    
+    // Set up interval for every 5 seconds
+    const interval = setInterval(() => {
+      generateRandomTransactions();
+    }, 5000);
+    
+    setAutoInterval(interval);
+  };
+
+  const stopAutoMode = () => {
+    setAutoMode(false);
+    if (autoInterval) {
+      clearInterval(autoInterval);
+      setAutoInterval(null);
+    }
+  };
+
+  // Cleanup interval on unmount
+  useEffect(() => {
+    return () => {
+      if (autoInterval) {
+        clearInterval(autoInterval);
+      }
+    };
+  }, [autoInterval]);
+
   if (isLoading) {
     return (
       <Frame>
@@ -243,6 +320,13 @@ export default function Dashboard() {
             primary
           >
             {demoRunning ? `Demo (${demoProgress.current}/${demoProgress.total})` : '🚀 Simulate Surge'}
+          </Button>
+          <Button
+            onClick={autoMode ? stopAutoMode : startAutoMode}
+            size="slim"
+            variant={autoMode ? "primary" : "secondary"}
+          >
+            {autoMode ? '⏹️ Stop Auto' : '⚡ Start Auto'}
           </Button>
         </div>
       }
