@@ -31,11 +31,11 @@ export default function StreamingTransactionChart({ transactions = [] }: Streami
     const buckets = new Map<number, number>();
     const cutoffTime = currentTime - (WINDOW_SIZE * 1000);
     
-    // Count transactions in 2-second buckets
+    // Count transactions in 5-second buckets
     transactions.forEach(transaction => {
       const txTime = new Date(transaction.createdAt).getTime();
       if (txTime >= cutoffTime) {
-        const bucketKey = Math.floor(txTime / 2000) * 2000;
+        const bucketKey = Math.floor(txTime / 5000) * 5000;
         buckets.set(bucketKey, (buckets.get(bucketKey) || 0) + 1);
       }
     });
@@ -60,7 +60,7 @@ export default function StreamingTransactionChart({ transactions = [] }: Streami
       // Generate positions from right to left (0 = newest/rightmost, 100 = oldest/leftmost)
       for (let pos = 0; pos < TOTAL_POSITIONS; pos++) {
         const timeForPosition = now - (pos * (WINDOW_SIZE * 1000) / TOTAL_POSITIONS);
-        const bucketKey = Math.floor(timeForPosition / 2000) * 2000;
+        const bucketKey = Math.floor(timeForPosition / 5000) * 5000;
         const count = buckets.get(bucketKey) || 0;
         
         newData.push({
@@ -185,7 +185,7 @@ export default function StreamingTransactionChart({ transactions = [] }: Streami
         fontSize: '12px',
         color: '#64748b'
       }}>
-        Transactions per 2-second interval | Real-time streaming
+        Transactions per 5-second interval | Real-time streaming
       </div>
     </div>
   );
