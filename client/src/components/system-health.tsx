@@ -69,11 +69,11 @@ export default function SystemHealth({ health }: SystemHealthProps) {
   }
 
   const healthItems = [
-    { name: 'API Health', status: health.system.api },
-    { name: 'Database', status: health.system.database },
+    { name: 'API Health', status: health.system?.api || health.status || 'Unknown' },
+    { name: 'Database', status: health.system?.database || 'Unknown' },
     { 
       name: 'Circuit Breaker', 
-      status: health.processors.some(p => p.circuitBreakerOpen) ? '1 Open' : 'Normal'
+      status: health.processors?.some(p => p.circuitBreakerOpen) ? '1 Open' : 'Normal'
     },
     { name: 'Rate Limiting', status: 'Normal' },
   ];
@@ -103,11 +103,11 @@ export default function SystemHealth({ health }: SystemHealthProps) {
         <h4 className="text-sm font-medium text-foreground mb-3" data-testid="smart-contract-title">Smart Contract Status</h4>
         <div className="flex items-center justify-between" data-testid="algorand-network-status">
           <div className="flex items-center">
-            <span className={`status-indicator ${health.smartContract.connected ? 'status-healthy' : 'status-error'}`}></span>
+            <span className={`status-indicator ${health.smartContract?.connected || health.algorand?.connected ? 'status-healthy' : 'status-error'}`}></span>
             <span className="text-sm text-foreground">Algorand Network</span>
           </div>
           <span className="text-sm font-medium text-chart-2">
-            {health.smartContract.connected ? 'Connected' : 'Disconnected'}
+            {health.smartContract?.connected || health.algorand?.connected ? 'Connected' : 'Disconnected'}
           </span>
         </div>
         <div className="flex items-center justify-between mt-2" data-testid="contract-client-status">
