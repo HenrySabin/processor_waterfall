@@ -1,0 +1,15 @@
+# PayFlow - 30-Second Algorand Explanation for Presentation
+
+Algorand was essential for PayFlow because enterprise payment processing demands real-time decisions. When a payment processor fails, businesses can't wait minutes for blockchain confirmation - they need immediate routing changes. Algorand's 3.3-second instant finality lets us update processor priorities in real-time, while its low fees make frequent configuration changes economically viable. The global state storage efficiently manages our processor configurations without gas concerns, and every priority change is transparently auditable on-chain. Most importantly, Algorand's speed means our payment routing decisions happen fast enough for live transaction processing - something impossible on slower blockchains. This creates the first truly decentralized, real-time payment infrastructure.
+
+---
+Word count: 89 words (perfect for 30 seconds at normal speaking pace)
+
+Key points covered:
+- Real-time requirement for payment processing
+- Instant finality advantage  
+- Low fees for frequent updates
+- Global state efficiency
+- Transparency benefits
+- Speed enabling live transaction processing
+- Unique positioning vs other blockchains
