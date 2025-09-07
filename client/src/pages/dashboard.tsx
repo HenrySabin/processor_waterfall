@@ -267,18 +267,18 @@ export default function Dashboard() {
           </Layout.Section>
           
           <Layout.Section>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-              <Card>
-                <div style={{ padding: '16px' }}>
-                  <Text variant="headingMd" as="h2">Transaction Volume</Text>
-                  <div style={{ marginTop: '16px', height: '200px' }}>
-                    <NivoStreamingChart transactions={metrics?.recentTransactions || []} />
-                  </div>
+            <Card>
+              <div style={{ padding: '16px' }}>
+                <Text variant="headingMd" as="h2">Transaction Volume</Text>
+                <div style={{ marginTop: '16px', height: '200px' }}>
+                  <NivoStreamingChart transactions={metrics?.recentTransactions || []} />
                 </div>
-              </Card>
-              
-              <RecentTransactions />
-            </div>
+              </div>
+            </Card>
+          </Layout.Section>
+          
+          <Layout.Section>
+            <RecentTransactions />
           </Layout.Section>
           
           <Layout.Section>
