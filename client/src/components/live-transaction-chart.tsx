@@ -116,11 +116,12 @@ export default function LiveTransactionChart({ transactions = [] }: LiveTransact
       })
       .map(point => {
         const age = currentTime - point.timestamp;
+        // Flow from left to right: newer data on right, older on left
         const baseX = chartWidth - (age * PIXELS_PER_SECOND / 1000);
         
         return {
           ...point,
-          x: padding.left + baseX + (timeOffsetRef.current % PIXELS_PER_SECOND),
+          x: padding.left + baseX,
           y: padding.top + chartHeight - (point.count / maxCount) * chartHeight
         };
       })
@@ -139,10 +140,9 @@ export default function LiveTransactionChart({ transactions = [] }: LiveTransact
       ctx.stroke();
     }
 
-    // Vertical grid lines (flowing)
-    const gridSpacing = 60; // Pixels between vertical lines
-    const gridOffset = timeOffsetRef.current % gridSpacing;
-    for (let x = padding.left + gridOffset; x <= padding.left + chartWidth; x += gridSpacing) {
+    // Vertical grid lines (static)
+    const gridSpacing = 80; // Pixels between vertical lines
+    for (let x = padding.left; x <= padding.left + chartWidth; x += gridSpacing) {
       ctx.beginPath();
       ctx.moveTo(x, padding.top);
       ctx.lineTo(x, padding.top + chartHeight);
@@ -214,17 +214,22 @@ export default function LiveTransactionChart({ transactions = [] }: LiveTransact
       ctx.fillText(value.toString(), padding.left - 10, y);
     }
 
-    // Draw flowing X-axis time labels
+    // Draw static X-axis time labels
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
     
     const labelSpacing = 120; // Pixels between time labels
-    const labelOffset = timeOffsetRef.current % labelSpacing;
+    const numLabels = Math.floor(chartWidth / labelSpacing) + 1;
     
-    for (let x = padding.left + labelOffset; x <= padding.left + chartWidth; x += labelSpacing) {
-      const timeAtPosition = currentTime - ((chartWidth - (x - padding.left)) * 1000 / PIXELS_PER_SECOND);
-      const timeLabel = format(new Date(timeAtPosition), 'HH:mm:ss');
-      ctx.fillText(timeLabel, x, padding.top + chartHeight + 10);
+    for (let i = 0; i < numLabels; i++) {
+      const x = padding.left + i * labelSpacing;
+      if (x <= padding.left + chartWidth) {
+        // Calculate time for this position (going backwards from current time)
+        const secondsBack = ((chartWidth - (x - padding.left)) / PIXELS_PER_SECOND);
+        const timeAtPosition = currentTime - (secondsBack * 1000);
+        const timeLabel = format(new Date(timeAtPosition), 'HH:mm:ss');
+        ctx.fillText(timeLabel, x, padding.top + chartHeight + 10);
+      }
     }
 
     // Draw "LIVE" indicator
@@ -269,7 +274,7 @@ export default function LiveTransactionChart({ transactions = [] }: LiveTransact
       const age = currentTime - point.timestamp;
       if (age <= CHART_DURATION) {
         const baseX = (rect.width - padding.left - padding.right) - (age * PIXELS_PER_SECOND / 1000);
-        const x = padding.left + baseX + (timeOffsetRef.current % PIXELS_PER_SECOND);
+        const x = padding.left + baseX;
         const maxCount = Math.max(...dataPointsRef.current.map(p => p.count), 1);
         const y = padding.top + (rect.height - padding.top - padding.bottom) - (point.count / maxCount) * (rect.height - padding.top - padding.bottom);
         
