@@ -321,7 +321,7 @@ export default function Dashboard() {
             onClick={() => runStaggeredDemo()}
             loading={demoRunning}
             size="slim"
-            primary
+            variant="primary"
           >
             {demoRunning ? `Demo (${demoProgress.current}/${demoProgress.total})` : '🚀 Simulate Surge'}
           </Button>
@@ -372,7 +372,7 @@ export default function Dashboard() {
                   </div>
                 </div>
                 <div style={{ marginTop: '16px', height: '200px' }}>
-                  <RechartsTransactionChart transactions={wsData.transactions?.transactions || wsData.metrics?.recentTransactions || []} />
+                  <RechartsTransactionChart transactions={(wsData.transactions?.transactions || wsData.metrics?.recentTransactions || []).map(t => ({ ...t, status: t.status as 'pending' | 'success' | 'failed' }))} />
                 </div>
               </div>
             </Card>

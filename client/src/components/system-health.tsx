@@ -103,11 +103,11 @@ export default function SystemHealth({ health }: SystemHealthProps) {
         <h4 className="text-sm font-medium text-foreground mb-3" data-testid="smart-contract-title">Smart Contract Status</h4>
         <div className="flex items-center justify-between" data-testid="algorand-network-status">
           <div className="flex items-center">
-            <span className={`status-indicator ${health.smartContract?.connected || health.algorand?.connected ? 'status-healthy' : 'status-error'}`}></span>
+            <span className={`status-indicator ${health.smartContract?.connected ? 'status-healthy' : 'status-error'}`}></span>
             <span className="text-sm text-foreground">Algorand Network</span>
           </div>
           <span className="text-sm font-medium text-chart-2">
-            {health.smartContract?.connected || health.algorand?.connected ? 'Connected' : 'Disconnected'}
+            {health.smartContract?.connected ? 'Connected' : 'Disconnected'}
           </span>
         </div>
         <div className="flex items-center justify-between mt-2" data-testid="contract-client-status">
