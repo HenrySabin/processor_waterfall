@@ -1,5 +1,6 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
+import { WebSocketServer, WebSocket } from "ws";
 import { storage } from "./storage";
 import { paymentProcessor } from "./services/paymentProcessor";
 import { circuitBreaker } from "./services/circuitBreaker";
@@ -90,6 +91,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const result = await paymentProcessor.processPayment(validatedData);
       
       if (result.success) {
+        // Broadcast real-time updates via WebSocket
+        try {
+          (global as any).wsMetricsUpdate?.();
+          (global as any).wsTransactionsUpdate?.();
+        } catch (wsError) {
+          logger.error('Failed to broadcast WebSocket updates', 'websocket', wsError instanceof Error ? wsError : undefined);
+        }
+
         res.status(201).json({
           success: true,
           transactionId: result.transaction.id,
@@ -476,5 +485,128 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   const httpServer = createServer(app);
+  
+  // WebSocket server setup
+  const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
+  
+  // Store active WebSocket connections
+  const clients = new Set<WebSocket>();
+  
+  wss.on('connection', (ws) => {
+    clients.add(ws);
+    logger.info('WebSocket client connected', 'websocket');
+    
+    // Send initial data on connection
+    sendMetricsUpdate(ws);
+    sendTransactionsUpdate(ws);
+    sendHealthUpdate(ws);
+    
+    ws.on('close', () => {
+      clients.delete(ws);
+      logger.info('WebSocket client disconnected', 'websocket');
+    });
+    
+    ws.on('error', (error) => {
+      logger.error('WebSocket error', 'websocket', error);
+      clients.delete(ws);
+    });
+  });
+  
+  // WebSocket broadcast functions
+  async function broadcastToClients(message: any) {
+    const data = JSON.stringify(message);
+    clients.forEach(client => {
+      if (client.readyState === WebSocket.OPEN) {
+        client.send(data);
+      }
+    });
+  }
+  
+  async function sendMetricsUpdate(client?: WebSocket) {
+    try {
+      const systemStats = await storage.getSystemStats();
+      const recentTransactions = await storage.getTransactions(100, 0);
+      const processorStatus = await paymentProcessor.getProcessorStatus();
+      
+      const message = {
+        type: 'metrics',
+        data: {
+          stats: systemStats,
+          recentTransactions: recentTransactions.transactions,
+          processors: processorStatus,
+          timestamp: new Date().toISOString()
+        }
+      };
+      
+      if (client) {
+        client.send(JSON.stringify(message));
+      } else {
+        broadcastToClients(message);
+      }
+    } catch (error) {
+      logger.error('Failed to send metrics update', 'websocket', error instanceof Error ? error : undefined);
+    }
+  }
+  
+  async function sendTransactionsUpdate(client?: WebSocket) {
+    try {
+      const result = await storage.getTransactions(10, 0);
+      const message = {
+        type: 'transactions',
+        data: {
+          transactions: result.transactions,
+          pagination: result.pagination,
+          timestamp: new Date().toISOString()
+        }
+      };
+      
+      if (client) {
+        client.send(JSON.stringify(message));
+      } else {
+        broadcastToClients(message);
+      }
+    } catch (error) {
+      logger.error('Failed to send transactions update', 'websocket', error instanceof Error ? error : undefined);
+    }
+  }
+  
+  async function sendHealthUpdate(client?: WebSocket) {
+    try {
+      const systemStats = await storage.getSystemStats();
+      const processorStatus = await paymentProcessor.getProcessorStatus();
+      const circuitBreakerStatus = await circuitBreaker.getCircuitBreakerStatus();
+      const contractStatus = await algorandClient.getContractStatus();
+      
+      const health = {
+        status: 'healthy',
+        uptime: process.uptime(),
+        memory: process.memoryUsage(),
+        system: systemStats,
+        processors: processorStatus,
+        circuitBreakers: circuitBreakerStatus,
+        algorand: contractStatus,
+        timestamp: new Date().toISOString()
+      };
+      
+      const message = {
+        type: 'health',
+        data: health
+      };
+      
+      if (client) {
+        client.send(JSON.stringify(message));
+      } else {
+        broadcastToClients(message);
+      }
+    } catch (error) {
+      logger.error('Failed to send health update', 'websocket', error instanceof Error ? error : undefined);
+    }
+  }
+  
+  // Make broadcast functions available globally
+  (global as any).wsMetricsUpdate = sendMetricsUpdate;
+  (global as any).wsTransactionsUpdate = sendTransactionsUpdate;
+  (global as any).wsHealthUpdate = sendHealthUpdate;
+  
   return httpServer;
 }
