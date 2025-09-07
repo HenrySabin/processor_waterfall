@@ -40,11 +40,11 @@ export default function TransactionChart({ transactions }: TransactionChartProps
     let chartData: any[] = [];
 
     if (timePeriod === 'realtime') {
-      // Last 2 minutes with 10-second intervals
-      const startTime = new Date(now.getTime() - 2 * 60 * 1000);
+      // Last 2 minutes with 10-second intervals - rolling window
       const intervals = [];
-      for (let i = 0; i < 12; i++) {
-        intervals.push(new Date(startTime.getTime() + i * 10 * 1000));
+      for (let i = 11; i >= 0; i--) {
+        // Create intervals going backwards from now
+        intervals.push(new Date(now.getTime() - i * 10 * 1000));
       }
       
       chartData = intervals.map(interval => {
@@ -298,13 +298,13 @@ export default function TransactionChart({ transactions }: TransactionChartProps
 
   }, [transactions, timePeriod]);
 
-  // Auto-refresh for real-time view
+  // Auto-refresh for real-time view - creates sliding window effect
   useEffect(() => {
     if (timePeriod === 'realtime') {
       const interval = setInterval(() => {
-        // Trigger re-render by updating a dummy state
-        setTooltip(prev => ({ ...prev }));
-      }, 5000); // Refresh every 5 seconds
+        // Force re-render to update the rolling time window
+        setTooltip(prev => ({ ...prev, x: Math.random() }));
+      }, 2000); // Refresh every 2 seconds for smooth sliding
 
       return () => clearInterval(interval);
     }
