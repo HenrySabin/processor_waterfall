@@ -37,10 +37,26 @@ export default function RechartsTransactionChart({ transactions = [] }: Recharts
   // Calculate newest bucket count (rightmost - most recent 0.5s)
   const calculateNewestBucketCount = useCallback(() => {
     const now = Date.now();
-    return transactions.filter(tx => {
+    console.log('🔍 Calculating newest bucket...');
+    console.log('🔍 Current time:', now);
+    console.log('🔍 Total transactions available:', transactions.length);
+    
+    // Check the first 5 transactions to see their ages
+    const firstFew = transactions.slice(0, 5).map(tx => ({
+      id: tx.id.substring(0, 8),
+      createdAt: tx.createdAt,
+      ageSeconds: ((now - new Date(tx.createdAt).getTime()) / 1000).toFixed(2)
+    }));
+    console.log('🔍 First 5 transactions with ages:', firstFew);
+    
+    const recentTransactions = transactions.filter(tx => {
       const ageInSeconds = (now - new Date(tx.createdAt).getTime()) / 1000;
       return ageInSeconds >= 0 && ageInSeconds < 0.5;
-    }).length;
+    });
+    
+    console.log('🔍 Transactions in 0-0.5s range:', recentTransactions.length);
+    
+    return recentTransactions.length;
   }, [transactions]);
 
   // Initialize chart data when transactions arrive - flowing animation will handle updates
