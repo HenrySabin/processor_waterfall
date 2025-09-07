@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { apiRequest } from "@/lib/queryClient";
@@ -20,9 +20,14 @@ import {
   Text,
   Divider,
   InlineStack,
-  BlockStack
+  BlockStack,
+  Frame,
+  Navigation,
+  TopBar,
+  Loading
 } from "@shopify/polaris";
 import { useToast } from "@/hooks/use-toast";
+import { useLocation } from "wouter";
 
 interface ProcessorConfig {
   processorId: string;
@@ -40,6 +45,8 @@ interface SmartContractStatus {
 }
 
 export default function Configuration() {
+  const [location, setLocation] = useLocation();
+  const [mobileNavigationActive, setMobileNavigationActive] = useState(false);
   const [editingProcessor, setEditingProcessor] = useState<ProcessorConfig | null>(null);
   const [modalActive, setModalActive] = useState(false);
   const [formData, setFormData] = useState({
@@ -50,6 +57,11 @@ export default function Configuration() {
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  const toggleMobileNavigationActive = useCallback(
+    () => setMobileNavigationActive((mobileNavigationActive) => !mobileNavigationActive),
+    [],
+  );
 
   // Fetch smart contract status
   const { data: contractStatus, isLoading: contractLoading } = useQuery({
@@ -173,12 +185,104 @@ export default function Configuration() {
 
   const isLoading = contractLoading || processorsLoading;
 
+  if (isLoading && !contractStatus && !processors.length) {
+    return (
+      <Frame>
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+          <Loading />
+        </div>
+      </Frame>
+    );
+  }
+
+  const getSystemStatus = () => {
+    if (!contractStatus) return { text: "Loading...", tone: "warning" };
+    
+    if (!contractStatus.connected) {
+      return { text: "Disconnected", tone: "critical" };
+    }
+    
+    return { text: "Connected", tone: "success" };
+  };
+
+  const systemStatus = getSystemStatus();
+
+  const navigationMarkup = (
+    <Navigation location={location}>
+      <Navigation.Section
+        items={[
+          {
+            url: '/dashboard',
+            label: 'Dashboard', 
+            selected: location === '/' || location === '/dashboard',
+            onClick: () => setLocation('/dashboard'),
+          },
+          {
+            url: '/processors',
+            label: 'Processors',
+            selected: location === '/processors', 
+            onClick: () => setLocation('/processors'),
+          },
+          {
+            url: '/transactions',
+            label: 'Transactions',
+            selected: location === '/transactions',
+            onClick: () => setLocation('/transactions'),
+          },
+          {
+            url: '/health',
+            label: 'Health',
+            selected: location === '/health',
+            onClick: () => setLocation('/health'),
+          },
+          {
+            url: '/config',
+            label: 'Configuration',
+            selected: location === '/config',
+            onClick: () => setLocation('/config'),
+          },
+        ]}
+      />
+    </Navigation>
+  );
+
+  const topBarMarkup = (
+    <TopBar
+      showNavigationToggle
+      onNavigationToggle={toggleMobileNavigationActive}
+      secondaryMenu={
+        <div style={{ padding: '8px 16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <Badge tone={systemStatus.tone as any}>{systemStatus.text}</Badge>
+          <Button
+            onClick={() => queryClient.invalidateQueries()}
+            size="slim"
+          >
+            Refresh Data
+          </Button>
+          <Button
+            onClick={() => setLocation('/dashboard')}
+            size="slim"
+            variant="primary"
+          >
+            💳 Back to Dashboard
+          </Button>
+        </div>
+      }
+    />
+  );
+
   return (
-    <Page 
-      title="Smart Contract Configuration"
-      subtitle="Review and adjust Algorand smart contract settings and processor priorities"
-      data-testid="page-configuration"
+    <Frame
+      topBar={topBarMarkup}
+      navigation={navigationMarkup}
+      showMobileNavigation={mobileNavigationActive}
+      onNavigationDismiss={toggleMobileNavigationActive}
     >
+      <Page 
+        title="Smart Contract Configuration"
+        subtitle="Review and adjust Algorand smart contract settings and processor priorities"
+        data-testid="page-configuration"
+      >
       <Layout>
         {/* Smart Contract Status */}
         <Layout.Section>
@@ -550,6 +654,7 @@ export default function Configuration() {
           </Form>
         </Modal.Section>
       </Modal>
-    </Page>
+      </Page>
+    </Frame>
   );
 }
