@@ -74,11 +74,12 @@ export default function LiveTransactionChart({ transactions = [] }: LiveTransact
     const now = Date.now();
     const deltaTime = now - lastUpdateRef.current;
     
-    // Update time offset for flowing effect
+    // Update time offset for flowing effect (always keep flowing)
     timeOffsetRef.current += deltaTime * PIXELS_PER_SECOND / 1000;
+    lastUpdateRef.current = now;
     
     // Update data points periodically
-    if (deltaTime >= UPDATE_INTERVAL) {
+    if (deltaTime >= UPDATE_INTERVAL || dataPointsRef.current.length === 0) {
       const buckets = aggregateTransactions(now);
       
       // Add new data points
@@ -94,7 +95,6 @@ export default function LiveTransactionChart({ transactions = [] }: LiveTransact
       
       // Replace old data points with new ones
       dataPointsRef.current = newPoints;
-      lastUpdateRef.current = now;
     }
 
     // Chart dimensions
@@ -245,13 +245,28 @@ export default function LiveTransactionChart({ transactions = [] }: LiveTransact
 
   // Start animation on mount
   useEffect(() => {
-    animationRef.current = requestAnimationFrame(animate);
+    const startAnimation = () => {
+      animationRef.current = requestAnimationFrame(animate);
+    };
+    
+    startAnimation();
     
     return () => {
       if (animationRef.current) {
         cancelAnimationFrame(animationRef.current);
       }
     };
+  }, [animate]);
+
+  // Ensure animation continues even if it stops
+  useEffect(() => {
+    const checkAnimation = setInterval(() => {
+      if (!animationRef.current) {
+        animationRef.current = requestAnimationFrame(animate);
+      }
+    }, 1000); // Check every second
+
+    return () => clearInterval(checkAnimation);
   }, [animate]);
 
   // Handle mouse interactions for tooltip
