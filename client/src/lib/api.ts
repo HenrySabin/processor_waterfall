@@ -162,4 +162,27 @@ export const api = {
     const res = await apiRequest('GET', `/api/logs${query}`);
     return await res.json();
   },
+
+  // Demo simulation
+  async simulatePaymentLoad(): Promise<{
+    success: boolean;
+    message: string;
+    summary: {
+      totalPayments: number;
+      successfulPayments: number;
+      failedPayments: number;
+      successRate: number;
+    };
+    results: Array<{
+      paymentIndex: number;
+      amount: string;
+      success: boolean;
+      processorUsed?: string;
+      transactionId: string;
+      processingTime: number;
+    }>;
+  }> {
+    const res = await apiRequest('POST', '/api/demo/simulate-load');
+    return await res.json();
+  },
 };

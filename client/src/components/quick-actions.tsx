@@ -1,10 +1,11 @@
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 
 export default function QuickActions() {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const testPaymentMutation = useMutation({
     mutationFn: () => api.processPayment({
@@ -13,6 +14,8 @@ export default function QuickActions() {
       metadata: { test: true, source: "dashboard" }
     }),
     onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/metrics'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/health'] });
       toast({
         title: "Test Payment Complete",
         description: `Payment ${data.success ? 'succeeded' : 'failed'} with transaction ID: ${data.transactionId}`,
@@ -23,6 +26,26 @@ export default function QuickActions() {
       toast({
         title: "Test Payment Failed",
         description: "Failed to process test payment.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const demoSimulationMutation = useMutation({
+    mutationFn: api.simulatePaymentLoad,
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/metrics'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/health'] });
+      toast({
+        title: "🚀 Demo Simulation Complete!",
+        description: `Processed ${data.summary.totalPayments} payments with ${data.summary.successRate}% success rate. Perfect for your hackathon demo!`,
+        duration: 6000,
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Demo Simulation Failed",
+        description: "Failed to run payment load simulation.",
         variant: "destructive",
       });
     },
@@ -70,6 +93,15 @@ export default function QuickActions() {
 
   const actions = [
     {
+      title: "🚀 Demo Mode",
+      description: "Simulate 25 payments for hackathon demo",
+      icon: "fas fa-rocket",
+      action: () => demoSimulationMutation.mutate(),
+      loading: demoSimulationMutation.isPending,
+      testId: "button-demo-simulation",
+      featured: true,
+    },
+    {
       title: "Test Payment",
       description: "Run test transaction",
       icon: "fas fa-vial",
@@ -108,14 +140,22 @@ export default function QuickActions() {
           <Button
             key={action.title}
             variant="ghost"
-            className="flex items-center p-4 bg-accent rounded-lg hover:bg-accent/80 h-auto justify-start"
+            className={`flex items-center p-4 rounded-lg h-auto justify-start transition-all duration-200 ${
+              action.featured 
+                ? 'bg-gradient-to-r from-primary/20 to-chart-2/20 border-2 border-primary/30 hover:from-primary/30 hover:to-chart-2/30 shadow-lg' 
+                : 'bg-accent hover:bg-accent/80'
+            }`}
             onClick={action.action}
             disabled={action.loading}
             data-testid={action.testId}
           >
-            <i className={`${action.icon} text-primary text-xl mr-3 ${action.loading ? 'animate-spin' : ''}`}></i>
+            <i className={`${action.icon} text-xl mr-3 ${
+              action.featured ? 'text-primary animate-pulse' : 'text-primary'
+            } ${action.loading ? 'animate-spin' : ''}`}></i>
             <div className="text-left">
-              <p className="font-medium text-foreground">{action.title}</p>
+              <p className={`font-medium ${action.featured ? 'text-primary font-bold' : 'text-foreground'}`}>
+                {action.title}
+              </p>
               <p className="text-sm text-muted-foreground">{action.description}</p>
             </div>
           </Button>
