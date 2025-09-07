@@ -148,34 +148,41 @@ export default function NivoStreamingChart({ transactions = [] }: NivoStreamingC
         borderColor={{ from: 'color', modifiers: [['darker', 0.7]] }}
         animate={false}
         isInteractive={true}
-        tooltip={({ layer, slice }) => (
-          <div
-            style={{
-              background: 'white',
-              padding: '12px',
-              border: '1px solid #ccc',
-              borderRadius: '4px',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-            }}
-          >
-            <strong>{slice.id}</strong>
-            <br />
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '8px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <div style={{ width: '12px', height: '12px', backgroundColor: '#3b82f6', borderRadius: '2px' }}></div>
-                <span>Stripe: {slice.data?.Stripe || 0}</span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <div style={{ width: '12px', height: '12px', backgroundColor: '#10b981', borderRadius: '2px' }}></div>
-                <span>PayPal: {slice.data?.PayPal || 0}</span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <div style={{ width: '12px', height: '12px', backgroundColor: '#f59e0b', borderRadius: '2px' }}></div>
-                <span>Square: {slice.data?.Square || 0}</span>
+        tooltip={({ slice }) => {
+          if (!slice || !slice.data) return null;
+          
+          return (
+            <div
+              style={{
+                background: 'white',
+                padding: '12px',
+                border: '1px solid #ccc',
+                borderRadius: '4px',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+              }}
+            >
+              <strong>{slice.data.time || 'Transaction Data'}</strong>
+              <br />
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '8px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <div style={{ width: '12px', height: '12px', backgroundColor: '#3b82f6', borderRadius: '2px' }}></div>
+                  <span>Stripe: {slice.data.Stripe || 0}</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <div style={{ width: '12px', height: '12px', backgroundColor: '#10b981', borderRadius: '2px' }}></div>
+                  <span>PayPal: {slice.data.PayPal || 0}</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <div style={{ width: '12px', height: '12px', backgroundColor: '#f59e0b', borderRadius: '2px' }}></div>
+                  <span>Square: {slice.data.Square || 0}</span>
+                </div>
+                <div style={{ marginTop: '4px', fontSize: '11px', color: '#666' }}>
+                  Total: {(slice.data.Stripe || 0) + (slice.data.PayPal || 0) + (slice.data.Square || 0)}
+                </div>
               </div>
             </div>
-          </div>
-        )}
+          );
+        }}
         theme={{
           background: 'transparent',
           text: {
