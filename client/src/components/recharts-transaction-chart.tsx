@@ -56,12 +56,16 @@ export default function RechartsTransactionChart({ transactions = [] }: Recharts
       {/* Live indicator */}
       <div style={{
         position: 'absolute',
-        top: '5px',
-        right: '5px',
+        top: '10px',
+        right: '15px',
         zIndex: 10,
         color: '#ef4444',
         fontSize: '14px',
-        fontWeight: 'bold'
+        fontWeight: 'bold',
+        backgroundColor: 'rgba(255, 255, 255, 0.9)',
+        padding: '4px 8px',
+        borderRadius: '4px',
+        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
       }}>
         ● LIVE
       </div>
