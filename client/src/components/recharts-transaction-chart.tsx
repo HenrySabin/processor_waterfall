@@ -43,9 +43,14 @@ export default function RechartsTransactionChart({ transactions = [] }: Recharts
     }).length;
   }, [transactions]);
 
-  // Initialize chart data ONCE on mount - flowing animation will handle updates
+  // Initialize chart data when transactions arrive - flowing animation will handle updates
   useEffect(() => {
-    console.log('🔄 Chart initializing with transactions:', transactions?.length || 0, 'transactions');
+    if (!transactions || transactions.length === 0) {
+      console.log('🔄 Chart waiting for transactions...');
+      return;
+    }
+    
+    console.log('🔄 Chart initializing with transactions:', transactions.length, 'transactions');
     
     const now = Date.now();
     const initialData = timeLabels.map(timeSlot => {
@@ -62,7 +67,7 @@ export default function RechartsTransactionChart({ transactions = [] }: Recharts
     
     console.log('📈 Initial chart data:', initialData.map(d => `${d.name}:${d.count}`).join(', '));
     setChartData(initialData);
-  }, []); // ← Only run ONCE on mount
+  }, [transactions]); // ← Re-run when transactions change
 
   // ✅ FLOWING ANIMATION: Set up right-to-left shifting every 500ms
   useEffect(() => {
