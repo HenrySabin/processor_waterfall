@@ -164,7 +164,7 @@ export default function Dashboard() {
 
   // Automated transaction generation
   const generateRandomTransactions = async () => {
-    const transactionCount = Math.floor(Math.random() * 16) + 5; // 5-20 transactions
+    const transactionCount = Math.floor(Math.random() * 3) + 1; // 1-3 transactions
     
     const customers = [
       "Alice Johnson", "Bob Smith", "Carol Davis", "David Wilson", "Eva Brown",
@@ -178,9 +178,9 @@ export default function Dashboard() {
       "Pro Tools", "Monthly Pro", "Team License", "Standard Plan", "Annual Pro"
     ];
 
-    // Generate transactions with random timing within 5 seconds
+    // Generate transactions with random timing within 0.5 seconds
     for (let i = 0; i < transactionCount; i++) {
-      const delay = Math.random() * 5000; // Random delay 0-5 seconds
+      const delay = Math.random() * 500; // Random delay 0-0.5 seconds
       
       setTimeout(async () => {
         const amount = (Math.random() * 800 + 15).toFixed(2);
@@ -212,10 +212,10 @@ export default function Dashboard() {
     // Generate initial batch immediately
     generateRandomTransactions();
     
-    // Set up interval for every 5 seconds
+    // Set up interval for every 0.5 seconds
     const interval = setInterval(() => {
       generateRandomTransactions();
-    }, 5000);
+    }, 500);
     
     setAutoInterval(interval);
   };
