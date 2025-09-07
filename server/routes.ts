@@ -555,7 +555,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       // Force fetch fresh transactions directly
       console.log('[DEBUG] Fetching transactions for WebSocket...');
-      const result = await storage.getTransactions(10, 0);
+      const result = await storage.getTransactions(200, 0);
       console.log('[DEBUG] Storage returned:', { 
         isArray: Array.isArray(result),
         hasTransactionsProperty: 'transactions' in result,
@@ -566,15 +566,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Handle both possible return formats
       const transactions = Array.isArray(result) ? result : result.transactions || [];
-      const pagination = Array.isArray(result) ? { total: result.length, limit: 10, offset: 0 } : result.pagination;
+      const pagination = Array.isArray(result) ? { total: result.length, limit: 200, offset: 0 } : result.pagination;
       
       console.log('[DEBUG] Final transactions to send:', transactions.length, 'first:', transactions[0]?.id);
       
       const message = {
         type: 'transactions',
         data: {
-          transactions: transactions.slice(0, 10), // Ensure only 10 transactions
-          pagination: pagination || { total: 0, limit: 10, offset: 0 },
+          transactions: transactions, // Send all transactions for chart
+          pagination: pagination || { total: 0, limit: 200, offset: 0 },
           timestamp: new Date().toISOString()
         }
       };
