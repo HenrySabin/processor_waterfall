@@ -1,7 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { ResponsiveLine } from "@nivo/line";
 import type { Transaction } from "@/lib/api";
-import { format } from "date-fns";
 
 interface NivoStreamingChartProps {
   transactions?: Transaction[];
@@ -10,7 +9,6 @@ interface NivoStreamingChartProps {
 interface DataPoint {
   x: string;
   y: number;
-  timestamp: number;
 }
 
 export default function NivoStreamingChart({ transactions = [] }: NivoStreamingChartProps) {
@@ -18,59 +16,50 @@ export default function NivoStreamingChart({ transactions = [] }: NivoStreamingC
   const animationRef = useRef<number>();
   const lastUpdateRef = useRef<number>(Date.now());
 
-  // Chart configuration
-  const WINDOW_SIZE = 60; // 60 seconds
-  const UPDATE_INTERVAL = 1000; // Update every second
-  const TOTAL_POINTS = 12; // 12 data points across 60 seconds = 5-second intervals
-
   // Fixed time labels that never change
-  const getFixedTimeLabels = () => {
-    return [
-      "Now", "5s ago", "10s ago", "15s ago", "20s ago", "25s ago",
-      "30s ago", "35s ago", "40s ago", "45s ago", "50s ago", "55s ago"
-    ];
-  };
+  const TIME_LABELS = ["Now", "10s", "20s", "30s", "40s", "50s", "60s"];
 
-  // Aggregate transactions into time buckets
-  const aggregateTransactions = (currentTime: number) => {
-    const buckets = new Map<number, number>();
-    const cutoffTime = currentTime - (WINDOW_SIZE * 1000);
-    
-    // Count transactions in 5-second buckets
-    transactions.forEach(transaction => {
-      const txTime = new Date(transaction.createdAt).getTime();
-      if (txTime >= cutoffTime) {
-        const bucketKey = Math.floor(txTime / 5000) * 5000;
-        buckets.set(bucketKey, (buckets.get(bucketKey) || 0) + 1);
-      }
-    });
-
-    return buckets;
-  };
-
-  // Animation loop for continuous updates
+  // Animation loop
   const animate = () => {
     const now = Date.now();
     const deltaTime = now - lastUpdateRef.current;
     
-    // Update data every second
-    if (deltaTime >= UPDATE_INTERVAL) {
-      const buckets = aggregateTransactions(now);
-      const labels = getFixedTimeLabels();
+    // Update every second
+    if (deltaTime >= 1000) {
+      // Create buckets for each time period
+      const buckets = new Map<string, number>();
       
-      // Generate data points with fixed labels
-      const newData: DataPoint[] = labels.map((label, index) => {
-        const secondsAgo = index * 5; // 5-second intervals
-        const timeForPoint = now - (secondsAgo * 1000);
-        const bucketKey = Math.floor(timeForPoint / 5000) * 5000;
-        const count = buckets.get(bucketKey) || 0;
+      // Initialize all buckets to 0
+      TIME_LABELS.forEach(label => buckets.set(label, 0));
+      
+      // Count recent transactions
+      transactions.forEach(transaction => {
+        const txTime = new Date(transaction.createdAt).getTime();
+        const ageInSeconds = (now - txTime) / 1000;
         
-        return {
-          x: label,
-          y: count,
-          timestamp: timeForPoint
-        };
+        // Determine which bucket this transaction belongs to
+        if (ageInSeconds <= 5) {
+          buckets.set("Now", (buckets.get("Now") || 0) + 1);
+        } else if (ageInSeconds <= 15) {
+          buckets.set("10s", (buckets.get("10s") || 0) + 1);
+        } else if (ageInSeconds <= 25) {
+          buckets.set("20s", (buckets.get("20s") || 0) + 1);
+        } else if (ageInSeconds <= 35) {
+          buckets.set("30s", (buckets.get("30s") || 0) + 1);
+        } else if (ageInSeconds <= 45) {
+          buckets.set("40s", (buckets.get("40s") || 0) + 1);
+        } else if (ageInSeconds <= 55) {
+          buckets.set("50s", (buckets.get("50s") || 0) + 1);
+        } else if (ageInSeconds <= 65) {
+          buckets.set("60s", (buckets.get("60s") || 0) + 1);
+        }
       });
+      
+      // Create data points
+      const newData: DataPoint[] = TIME_LABELS.map(label => ({
+        x: label,
+        y: buckets.get(label) || 0
+      }));
       
       setChartData(newData);
       lastUpdateRef.current = now;
@@ -156,7 +145,6 @@ export default function NivoStreamingChart({ transactions = [] }: NivoStreamingC
         areaBaselineValue={0}
         enableGridX={true}
         enableGridY={true}
-        gridXValues={chartData.map((_, index) => index)}
         gridYValues={5}
         animate={false} // Disable built-in animation for smoother real-time updates
         isInteractive={true}
