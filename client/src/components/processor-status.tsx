@@ -1,5 +1,5 @@
 import { Card, Text, Badge, Button, DataTable, ButtonGroup, Toast } from "@shopify/polaris";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import type { ProcessorStatus as ProcessorStatusType } from "@/lib/api";
@@ -12,9 +12,65 @@ export default function ProcessorStatus({ processors }: ProcessorStatusProps) {
   const [toastActive, setToastActive] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [showAll, setShowAll] = useState(false);
+  const [recentlyUsedProcessors, setRecentlyUsedProcessors] = useState<Set<string>>(new Set());
   const queryClient = useQueryClient();
 
   const toggleToastActive = useCallback(() => setToastActive((active) => !active), []);
+
+  // WebSocket connection to track real-time processor usage
+  useEffect(() => {
+    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+    const wsUrl = `${protocol}//${window.location.host}/ws`;
+    const socket = new WebSocket(wsUrl);
+
+    socket.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        
+        // Track processor usage from transaction messages
+        if (data.type === 'transaction' && data.data?.processorId) {
+          const processorId = data.data.processorId;
+          
+          // Mark processor as recently used
+          setRecentlyUsedProcessors(prev => new Set(Array.from(prev).concat(processorId)));
+          
+          // Remove from recently used after 3 seconds
+          setTimeout(() => {
+            setRecentlyUsedProcessors(prev => {
+              const newSet = new Set(Array.from(prev));
+              newSet.delete(processorId);
+              return newSet;
+            });
+          }, 3000);
+        }
+
+        // Also track from metrics updates when processors are actively processing
+        if (data.type === 'metrics' && data.data?.recentTransactions) {
+          data.data.recentTransactions.forEach((tx: any) => {
+            if (tx.processorId && tx.status === 'success') {
+              const processorId = tx.processorId;
+              
+              setRecentlyUsedProcessors(prev => new Set(Array.from(prev).concat(processorId)));
+              
+              setTimeout(() => {
+                setRecentlyUsedProcessors(prev => {
+                  const newSet = new Set(Array.from(prev));
+                  newSet.delete(processorId);
+                  return newSet;
+                });
+              }, 3000);
+            }
+          });
+        }
+      } catch (error) {
+        // Ignore parsing errors
+      }
+    };
+
+    return () => {
+      socket.close();
+    };
+  }, []);
 
   const toggleMutation = useMutation({
     mutationFn: api.toggleProcessor,
@@ -59,21 +115,52 @@ export default function ProcessorStatus({ processors }: ProcessorStatusProps) {
 
   const displayedProcessors = showAll ? processors : processors.slice(0, 10);
   
-  const rows = displayedProcessors.map((processor) => [
-    <div key={`name-${processor.id}`} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-      <div 
-        style={{
-          width: '8px',
-          height: '8px',
-          borderRadius: '50%',
-          backgroundColor: 
-            !processor.enabled ? '#9CA3AF' :
-            processor.circuitBreakerOpen ? '#EF4444' :
-            processor.consecutiveFailures > 0 ? '#F59E0B' : '#10B981'
-        }}
-      />
-      <Text variant="bodyMd" as="span" fontWeight="semibold">{processor.name}</Text>
-    </div>,
+  const rows = displayedProcessors.map((processor) => {
+    const isRecentlyUsed = recentlyUsedProcessors.has(processor.id);
+    
+    return [
+      <div key={`name-${processor.id}`} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+          {/* Outer glow ring for recently used processors */}
+          {isRecentlyUsed && (
+            <div 
+              style={{
+                position: 'absolute',
+                width: '16px',
+                height: '16px',
+                borderRadius: '50%',
+                backgroundColor: '#10B981',
+                opacity: 0.3,
+                animation: 'pulse-glow 2s infinite',
+                zIndex: 0
+              }}
+            />
+          )}
+          
+          {/* Main status indicator */}
+          <div 
+            style={{
+              width: isRecentlyUsed ? '10px' : '8px',
+              height: isRecentlyUsed ? '10px' : '8px',
+              borderRadius: '50%',
+              backgroundColor: 
+                !processor.enabled ? '#9CA3AF' :
+                processor.circuitBreakerOpen ? '#EF4444' :
+                processor.consecutiveFailures > 0 ? '#F59E0B' : '#10B981',
+              boxShadow: isRecentlyUsed ? '0 0 8px #10B981' : 'none',
+              transition: 'all 0.3s ease',
+              zIndex: 1,
+              position: 'relative'
+            }}
+          />
+        </div>
+        <Text variant="bodyMd" as="span" fontWeight="semibold">{processor.name}</Text>
+        {isRecentlyUsed && (
+          <Text variant="bodySm" as="span" tone="success" fontWeight="medium">
+            • PROCESSING
+          </Text>
+        )}
+      </div>,
     <Text variant="bodyMd" as="span" key={`priority-${processor.id}`}>
       {processor.priority}
     </Text>,
@@ -121,7 +208,8 @@ export default function ProcessorStatus({ processors }: ProcessorStatusProps) {
         </span>
       </label>
     </div>,
-  ]);
+    ];
+  });
 
   const headings = [
     'Processor',
@@ -136,6 +224,22 @@ export default function ProcessorStatus({ processors }: ProcessorStatusProps) {
 
   return (
     <>
+      <style>{`
+        @keyframes pulse-glow {
+          0% {
+            transform: scale(1);
+            opacity: 0.3;
+          }
+          50% {
+            transform: scale(1.2);
+            opacity: 0.1;
+          }
+          100% {
+            transform: scale(1);
+            opacity: 0.3;
+          }
+        }
+      `}</style>
       <Card>
         <div style={{ padding: '16px' }}>
           <div style={{ marginBottom: '16px' }}>
