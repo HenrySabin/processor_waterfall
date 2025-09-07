@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import type { Transaction } from "@/lib/api";
 
 interface RechartsTransactionChartProps {
@@ -41,8 +41,8 @@ export default function RechartsTransactionChart({ transactions = [] }: Recharts
       {/* Live indicator */}
       <div style={{
         position: 'absolute',
-        top: '10px',
-        right: '20px',
+        top: '5px',
+        right: '5px',
         zIndex: 10,
         color: '#ef4444',
         fontSize: '14px',
@@ -51,10 +51,10 @@ export default function RechartsTransactionChart({ transactions = [] }: Recharts
         ● LIVE
       </div>
 
-      {/* Recharts Bar Chart */}
+      {/* Recharts Area Chart */}
       <div style={{ height: '180px', paddingTop: '10px' }}>
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart
+          <AreaChart
             data={chartData}
             margin={{
               top: 20,
@@ -63,6 +63,12 @@ export default function RechartsTransactionChart({ transactions = [] }: Recharts
               bottom: 5,
             }}
           >
+            <defs>
+              <linearGradient id="colorGradient" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8}/>
+                <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.1}/>
+              </linearGradient>
+            </defs>
             <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
             <XAxis 
               dataKey="name" 
@@ -83,13 +89,15 @@ export default function RechartsTransactionChart({ transactions = [] }: Recharts
               }}
               labelStyle={{ color: '#f9fafb' }}
             />
-            <Bar 
+            <Area 
+              type="monotone"
               dataKey="count" 
-              fill="#3b82f6" 
-              radius={[4, 4, 0, 0]}
+              stroke="#3b82f6"
+              strokeWidth={2}
+              fill="url(#colorGradient)"
               animationDuration={750}
             />
-          </BarChart>
+          </AreaChart>
         </ResponsiveContainer>
       </div>
 
@@ -102,7 +110,7 @@ export default function RechartsTransactionChart({ transactions = [] }: Recharts
         fontSize: '12px',
         color: '#64748b'
       }}>
-        Transaction volume by time period | Recharts
+        Transaction volume by time period | Area Histogram
       </div>
     </div>
   );
