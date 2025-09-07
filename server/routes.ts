@@ -357,7 +357,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Demo simulation endpoint for hackathon demonstrations
+  // Demo simulation endpoint for payment demonstrations
   app.post('/api/demo/simulate-load', async (req, res) => {
     try {
       logger.info('Demo payment load simulation started', 'api', { ip: req.ip });

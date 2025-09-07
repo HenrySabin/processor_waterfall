@@ -38,7 +38,7 @@ export default function QuickActions() {
       queryClient.invalidateQueries({ queryKey: ['/api/health'] });
       toast({
         title: "🚀 Demo Simulation Complete!",
-        description: `Processed ${data.summary.totalPayments} payments with ${data.summary.successRate}% success rate. Perfect for your hackathon demo!`,
+        description: `Processed ${data.summary.totalPayments} payments with ${data.summary.successRate}% success rate. Perfect for your demo presentation!`,
         duration: 6000,
       });
     },
@@ -94,7 +94,7 @@ export default function QuickActions() {
   const actions = [
     {
       title: "🚀 Demo Mode",
-      description: "Simulate 25 payments for hackathon demo",
+      description: "Simulate 25 payments for demo presentation",
       icon: "fas fa-rocket",
       action: () => demoSimulationMutation.mutate(),
       loading: demoSimulationMutation.isPending,
