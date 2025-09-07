@@ -138,16 +138,8 @@ export default function ProcessorStatus({ processors }: ProcessorStatusProps) {
     <>
       <Card>
         <div style={{ padding: '16px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+          <div style={{ marginBottom: '16px' }}>
             <Text variant="headingMd" as="h3">Processor Status</Text>
-            {processors.length > 10 && (
-              <Button 
-                size="slim" 
-                onClick={() => setShowAll(!showAll)}
-              >
-                {showAll ? 'Show Less' : `Show More (${processors.length - 10} hidden)`}
-              </Button>
-            )}
           </div>
           
           <DataTable
@@ -160,6 +152,17 @@ export default function ProcessorStatus({ processors }: ProcessorStatusProps) {
               </Text>
             }
           />
+          
+          {processors.length > 10 && (
+            <div style={{ marginTop: '16px', textAlign: 'center' }}>
+              <Button 
+                size="slim" 
+                onClick={() => setShowAll(!showAll)}
+              >
+                {showAll ? 'Show Less' : `Show More (${processors.length - 10} hidden)`}
+              </Button>
+            </div>
+          )}
         </div>
       </Card>
       {toastMarkup}
