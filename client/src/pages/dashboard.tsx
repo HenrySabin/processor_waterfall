@@ -151,22 +151,22 @@ export default function Dashboard() {
           </Layout.Section>
           
           <Layout.Section>
-            <Card>
-              <div style={{ padding: '16px' }}>
-                <Text variant="headingMd" as="h2">Transaction Volume (Last 12h)</Text>
-                <div style={{ marginTop: '16px', height: '200px' }}>
-                  <TransactionChart transactions={metrics?.recentTransactions || []} />
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+              <Card>
+                <div style={{ padding: '16px' }}>
+                  <Text variant="headingMd" as="h2">Transaction Volume (Last 12h)</Text>
+                  <div style={{ marginTop: '16px', height: '200px' }}>
+                    <TransactionChart transactions={metrics?.recentTransactions || []} />
+                  </div>
                 </div>
-              </div>
-            </Card>
+              </Card>
+              
+              <RecentTransactions />
+            </div>
           </Layout.Section>
           
           <Layout.Section>
             <ProcessorStatus processors={metrics?.processors || []} />
-          </Layout.Section>
-          
-          <Layout.Section>
-            <RecentTransactions />
           </Layout.Section>
           
           <Layout.Section>
