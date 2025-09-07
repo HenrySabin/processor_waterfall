@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { useEffect, useState, useCallback, useRef } from "react";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import type { Transaction } from "@/lib/api";
 
 interface RechartsTransactionChartProps {
@@ -8,35 +8,45 @@ interface RechartsTransactionChartProps {
 
 export default function RechartsTransactionChart({ transactions = [] }: RechartsTransactionChartProps) {
   const [chartData, setChartData] = useState<Array<{name: string, count: number}>>([]);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Update chart data when transactions change
-  useEffect(() => {
+  // Initialize chart with reversed time labels (newest on right, oldest on left)
+  const timeLabels = [
+    { label: "10s", rangeStart: 9.5, rangeEnd: 10 },     // Leftmost (oldest)
+    { label: "9.5s", rangeStart: 9, rangeEnd: 9.5 },
+    { label: "9s", rangeStart: 8.5, rangeEnd: 9 },
+    { label: "8.5s", rangeStart: 8, rangeEnd: 8.5 },
+    { label: "8s", rangeStart: 7.5, rangeEnd: 8 },
+    { label: "7.5s", rangeStart: 7, rangeEnd: 7.5 },
+    { label: "7s", rangeStart: 6.5, rangeEnd: 7 },
+    { label: "6.5s", rangeStart: 6, rangeEnd: 6.5 },
+    { label: "6s", rangeStart: 5.5, rangeEnd: 6 },
+    { label: "5.5s", rangeStart: 5, rangeEnd: 5.5 },
+    { label: "5s", rangeStart: 4.5, rangeEnd: 5 },
+    { label: "4.5s", rangeStart: 4, rangeEnd: 4.5 },
+    { label: "4s", rangeStart: 3.5, rangeEnd: 4 },
+    { label: "3.5s", rangeStart: 3, rangeEnd: 3.5 },
+    { label: "3s", rangeStart: 2.5, rangeEnd: 3 },
+    { label: "2.5s", rangeStart: 2, rangeEnd: 2.5 },
+    { label: "2s", rangeStart: 1.5, rangeEnd: 2 },
+    { label: "1.5s", rangeStart: 1, rangeEnd: 1.5 },
+    { label: "1s", rangeStart: 0.5, rangeEnd: 1 },
+    { label: "0.5s", rangeStart: 0, rangeEnd: 0.5 }      // Rightmost (newest)
+  ];
+
+  // Calculate newest bucket count (rightmost - most recent 0.5s)
+  const calculateNewestBucketCount = useCallback(() => {
     const now = Date.now();
-    const timeLabels = [
-      { label: "10s", rangeStart: 9.5, rangeEnd: 10 },
-      { label: "9.5s", rangeStart: 9, rangeEnd: 9.5 },
-      { label: "9s", rangeStart: 8.5, rangeEnd: 9 },
-      { label: "8.5s", rangeStart: 8, rangeEnd: 8.5 },
-      { label: "8s", rangeStart: 7.5, rangeEnd: 8 },
-      { label: "7.5s", rangeStart: 7, rangeEnd: 7.5 },
-      { label: "7s", rangeStart: 6.5, rangeEnd: 7 },
-      { label: "6.5s", rangeStart: 6, rangeEnd: 6.5 },
-      { label: "6s", rangeStart: 5.5, rangeEnd: 6 },
-      { label: "5.5s", rangeStart: 5, rangeEnd: 5.5 },
-      { label: "5s", rangeStart: 4.5, rangeEnd: 5 },
-      { label: "4.5s", rangeStart: 4, rangeEnd: 4.5 },
-      { label: "4s", rangeStart: 3.5, rangeEnd: 4 },
-      { label: "3.5s", rangeStart: 3, rangeEnd: 3.5 },
-      { label: "3s", rangeStart: 2.5, rangeEnd: 3 },
-      { label: "2.5s", rangeStart: 2, rangeEnd: 2.5 },
-      { label: "2s", rangeStart: 1.5, rangeEnd: 2 },
-      { label: "1.5s", rangeStart: 1, rangeEnd: 1.5 },
-      { label: "1s", rangeStart: 0.5, rangeEnd: 1 },
-      { label: "0.5s", rangeStart: 0, rangeEnd: 0.5 }
-    ];
-    
-    // Count transactions in each time bucket
-    const data = timeLabels.map(timeSlot => {
+    return transactions.filter(tx => {
+      const ageInSeconds = (now - new Date(tx.createdAt).getTime()) / 1000;
+      return ageInSeconds >= 0 && ageInSeconds < 0.5;
+    }).length;
+  }, [transactions]);
+
+  // Initialize chart data on mount
+  useEffect(() => {
+    const initialData = timeLabels.map(timeSlot => {
+      const now = Date.now();
       const count = transactions.filter(tx => {
         const ageInSeconds = (now - new Date(tx.createdAt).getTime()) / 1000;
         return ageInSeconds >= timeSlot.rangeStart && ageInSeconds < timeSlot.rangeEnd;
@@ -48,8 +58,44 @@ export default function RechartsTransactionChart({ transactions = [] }: Recharts
       };
     });
     
-    setChartData(data);
-  }, [transactions]);
+    setChartData(initialData);
+  }, []);
+
+  // Set up shifting animation every 500ms
+  useEffect(() => {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+    }
+
+    intervalRef.current = setInterval(() => {
+      setChartData(prevData => {
+        if (prevData.length === 0) return prevData;
+        
+        // Shift all data one position left (older)
+        const shiftedData = prevData.map((item, index) => {
+          if (index === 0) {
+            // Leftmost bucket gets cleared (oldest data ages out)
+            return { ...item, count: 0 };
+          } else {
+            // Each bucket takes the value from the bucket to its right
+            return { ...item, count: prevData[index - 1].count };
+          }
+        });
+        
+        // Add new data to rightmost bucket (newest)
+        const newestCount = calculateNewestBucketCount();
+        shiftedData[shiftedData.length - 1].count = newestCount;
+        
+        return shiftedData;
+      });
+    }, 500); // Shift every 0.5 seconds
+    
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+    };
+  }, [calculateNewestBucketCount]);
 
   return (
     <div style={{ position: 'relative', height: '200px' }} data-testid="recharts-transaction-chart">
@@ -89,13 +135,51 @@ export default function RechartsTransactionChart({ transactions = [] }: Recharts
             />
             <Bar 
               dataKey="count" 
-              fill="#3b82f6"
-              isAnimationActive={false}
-            />
+              isAnimationActive={true}
+              animationDuration={400}
+              animationEasing="ease-out"
+            >
+              {chartData.map((entry, index) => {
+                const isNewest = index === chartData.length - 1;
+                const isSecondNewest = index === chartData.length - 2;
+                let fillColor;
+                
+                if (isNewest) {
+                  fillColor = "#1d4ed8"; // Bright blue for newest data
+                } else if (isSecondNewest) {
+                  fillColor = "#2563eb"; // Medium blue for recent data
+                } else {
+                  fillColor = "#64748b"; // Gray for older data
+                }
+                
+                return <Cell key={`cell-${index}`} fill={fillColor} />;
+              })}
+            </Bar>
           </BarChart>
         </ResponsiveContainer>
       </div>
 
+      {/* Timeline flow indicator */}
+      <div style={{
+        position: 'absolute',
+        bottom: '20px',
+        left: '50%',
+        transform: 'translateX(-50%)',
+        display: 'flex',
+        alignItems: 'center',
+        fontSize: '11px',
+        color: '#6b7280',
+        gap: '8px'
+      }}>
+        <span style={{ color: '#64748b' }}>Old</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+          <span style={{ color: '#ef4444', fontSize: '14px' }}>←←←</span>
+          <span style={{ fontWeight: '500' }}>Real-time Flow</span>
+          <span style={{ color: '#ef4444', fontSize: '14px' }}>←←←</span>
+        </div>
+        <span style={{ color: '#1d4ed8', fontWeight: '600' }}>New</span>
+      </div>
+      
       {/* Chart info */}
       <div style={{
         position: 'absolute',
@@ -105,7 +189,7 @@ export default function RechartsTransactionChart({ transactions = [] }: Recharts
         fontSize: '12px',
         color: '#64748b'
       }}>
-        Transaction volume by time period | Bar Chart
+        Live Transaction Timeline | Flowing Left
       </div>
     </div>
   );
