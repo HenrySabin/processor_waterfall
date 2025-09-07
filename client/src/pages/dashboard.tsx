@@ -173,12 +173,12 @@ export default function Dashboard() {
       "Premium Plan", "Enterprise License", "Monthly Subscription", "Basic Plan", "Yearly Premium"
     ];
 
-    // Generate 1-10 transactions per call
-    const transactionCount = Math.floor(Math.random() * 10) + 1;
+    // Generate 1-3 transactions per call to avoid rate limits
+    const transactionCount = Math.floor(Math.random() * 3) + 1;
     
     for (let i = 0; i < transactionCount; i++) {
-      // Stagger transactions within the 0.5 second window to avoid rate limits
-      const delay = (i * 50); // 50ms apart
+      // Stagger transactions within the window to avoid rate limits
+      const delay = (i * 200); // 200ms apart
       
       setTimeout(async () => {
         const amount = (Math.random() * 800 + 15).toFixed(2);
@@ -211,10 +211,10 @@ export default function Dashboard() {
     // Generate initial transaction immediately
     generateRandomTransactions();
     
-    // Set up interval for every 0.5 seconds with 1-10 transactions each time
+    // Set up interval for every 2 seconds with 1-3 transactions each time
     const interval = setInterval(() => {
       generateRandomTransactions();
-    }, 500);
+    }, 2000);
     
     setAutoInterval(interval);
   };
