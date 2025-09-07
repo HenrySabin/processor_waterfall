@@ -96,7 +96,7 @@ export class AlgorandClient {
     try {
       // Make real call to get application info and global state
       const appInfo = await this.algodClient.getApplicationByID(this.config.appId).do();
-      const globalState = appInfo.params['global-state'] || [];
+      const globalState = appInfo.params.globalState || [];
       
       logger.debug('Retrieved processor priorities from Algorand contract', 'algorand-client', {
         appId: this.config.appId,
