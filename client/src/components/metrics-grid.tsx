@@ -1,4 +1,4 @@
-import { Card, Text, DisplayText, SkeletonDisplayText, SkeletonBodyText } from "@shopify/polaris";
+import { Card, Text, SkeletonDisplayText, SkeletonBodyText } from "@shopify/polaris";
 import type { SystemStats } from "@/lib/api";
 
 interface MetricsGridProps {
@@ -85,9 +85,9 @@ export default function MetricsGrid({ stats }: MetricsGridProps) {
                   {metric.title}
                 </Text>
                 <div style={{ marginTop: '8px' }}>
-                  <DisplayText size="large" element="p" data-testid={`${metric.testId}-value`}>
+                  <Text variant="headingXl" as="p" data-testid={`${metric.testId}-value`}>
                     {metric.value}
-                  </DisplayText>
+                  </Text>
                 </div>
                 <div style={{ marginTop: '8px' }}>
                   <Text variant="bodySm" as="p" tone="success" data-testid={`${metric.testId}-change`}>
