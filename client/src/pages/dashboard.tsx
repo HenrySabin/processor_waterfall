@@ -150,7 +150,7 @@ export default function Dashboard() {
             <MetricsGrid stats={metrics?.stats || {}} />
           </Layout.Section>
           
-          <Layout.Section secondary>
+          <Layout.Section>
             <Card>
               <div style={{ padding: '16px' }}>
                 <Text variant="headingMd" as="h2">Transaction Volume (Last 12h)</Text>
@@ -161,7 +161,7 @@ export default function Dashboard() {
             </Card>
           </Layout.Section>
           
-          <Layout.Section secondary>
+          <Layout.Section>
             <ProcessorStatus processors={metrics?.processors || []} />
           </Layout.Section>
           
@@ -169,11 +169,11 @@ export default function Dashboard() {
             <RecentTransactions transactions={metrics?.recentTransactions || []} />
           </Layout.Section>
           
-          <Layout.Section secondary>
+          <Layout.Section>
             <SystemHealth health={health as any} />
           </Layout.Section>
           
-          <Layout.Section secondary>
+          <Layout.Section>
             <QuickActions />
           </Layout.Section>
         </Layout>
