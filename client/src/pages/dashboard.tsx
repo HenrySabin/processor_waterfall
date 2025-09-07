@@ -200,10 +200,10 @@ export default function Dashboard() {
     // Generate initial transaction immediately
     generateRandomTransactions();
     
-    // Set up interval for every 5 seconds - very conservative
+    // Set up interval for every 1 second to get higher counts
     const interval = setInterval(() => {
       generateRandomTransactions();
-    }, 5000);
+    }, 1000);
     
     setAutoInterval(interval);
   };
