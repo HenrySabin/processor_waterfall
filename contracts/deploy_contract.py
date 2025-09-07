@@ -17,8 +17,8 @@ Requirements:
 import base64
 from algosdk import account, mnemonic, constants
 from algosdk.v2client import algod
-from algosdk.future import transaction
-from algosdk.future.transaction import ApplicationCreateTxn, OnComplete
+from algosdk import transaction
+from algosdk.transaction import ApplicationCreateTxn, OnComplete
 from pyteal import *
 import time
 import os

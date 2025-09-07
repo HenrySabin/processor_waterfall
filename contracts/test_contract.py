@@ -11,7 +11,7 @@ Usage:
 
 import sys
 from algosdk.v2client import algod
-from algosdk.future.transaction import ApplicationNoOpTxn
+from algosdk.transaction import ApplicationNoOpTxn
 from algosdk import encoding
 import base64
 
