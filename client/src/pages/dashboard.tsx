@@ -162,7 +162,7 @@ export default function Dashboard() {
     }
   };
 
-  // Automated transaction generation - much more conservative
+  // Automated transaction generation - 1-10 transactions every 0.5 seconds
   const generateRandomTransactions = async () => {
     const customers = [
       "Alice Johnson", "Bob Smith", "Carol Davis", "David Wilson", "Eva Brown",
@@ -173,22 +173,33 @@ export default function Dashboard() {
       "Premium Plan", "Enterprise License", "Monthly Subscription", "Basic Plan", "Yearly Premium"
     ];
 
-    // Generate just 1 transaction per call to avoid rate limits
-    const amount = (Math.random() * 800 + 15).toFixed(2);
-    const customer = customers[Math.floor(Math.random() * customers.length)];
-    const product = products[Math.floor(Math.random() * products.length)];
+    // Generate 1-10 transactions per call
+    const transactionCount = Math.floor(Math.random() * 10) + 1;
     
-    try {
-      await api.processPayment({
-        amount,
-        currency: "USD",
-        metadata: { auto: true, customer, product }
-      });
+    for (let i = 0; i < transactionCount; i++) {
+      // Stagger transactions within the 0.5 second window to avoid rate limits
+      const delay = (i * 50); // 50ms apart
       
-      // Invalidate queries to refresh the UI
-      queryClient.invalidateQueries({ queryKey: ['/api/metrics'] });
-    } catch (error) {
-      // Silent fail for auto-generated transactions
+      setTimeout(async () => {
+        const amount = (Math.random() * 800 + 15).toFixed(2);
+        const customer = customers[Math.floor(Math.random() * customers.length)];
+        const product = products[Math.floor(Math.random() * products.length)];
+        
+        try {
+          await api.processPayment({
+            amount,
+            currency: "USD",
+            metadata: { auto: true, customer, product }
+          });
+          
+          // Only invalidate on last transaction to reduce overhead
+          if (i === transactionCount - 1) {
+            queryClient.invalidateQueries({ queryKey: ['/api/metrics'] });
+          }
+        } catch (error) {
+          // Silent fail for auto-generated transactions
+        }
+      }, delay);
     }
   };
 
@@ -200,10 +211,10 @@ export default function Dashboard() {
     // Generate initial transaction immediately
     generateRandomTransactions();
     
-    // Set up interval for every 1 second to get higher counts
+    // Set up interval for every 0.5 seconds with 1-10 transactions each time
     const interval = setInterval(() => {
       generateRandomTransactions();
-    }, 1000);
+    }, 500);
     
     setAutoInterval(interval);
   };
