@@ -178,9 +178,9 @@ export default function Dashboard() {
       "Pro Tools", "Monthly Pro", "Team License", "Standard Plan", "Annual Pro"
     ];
 
-    // Generate transactions with random timing within 0.5 seconds
+    // Generate transactions with random timing within 2 seconds
     for (let i = 0; i < transactionCount; i++) {
-      const delay = Math.random() * 500; // Random delay 0-0.5 seconds
+      const delay = Math.random() * 2000; // Random delay 0-2 seconds
       
       setTimeout(async () => {
         const amount = (Math.random() * 800 + 15).toFixed(2);
@@ -212,10 +212,10 @@ export default function Dashboard() {
     // Generate initial batch immediately
     generateRandomTransactions();
     
-    // Set up interval for every 0.5 seconds
+    // Set up interval for every 2 seconds to avoid rate limits
     const interval = setInterval(() => {
       generateRandomTransactions();
-    }, 500);
+    }, 2000);
     
     setAutoInterval(interval);
   };
