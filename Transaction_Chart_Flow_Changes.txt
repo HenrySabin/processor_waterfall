@@ -384,6 +384,100 @@ SUMMARY OF KEY CHANGES
 6. **User Experience**: Intuitive chronological data movement
 7. **Performance**: Optimized intervals and memory management
 
-RESULT: A dynamic, flowing timeline that clearly shows real-time transaction data movement from newest (right) to oldest (left) with professional visual feedback and smooth animations.
+================================================================
+8. FINAL SYSTEM BEHAVIOR SPECIFICATION
+================================================================
 
-The chart now provides an engaging, intuitive way to monitor transaction volume in real-time, with obvious visual cues that data is flowing and updating continuously.
+8.1 COMPLETE DATA FLOW ARCHITECTURE
+------------------------------------
+The Transaction Volume Chart now implements a **dual-system architecture**:
+
+**SYSTEM 1: Real-Time Data Collection**
+- Monitors live WebSocket transaction updates
+- Calculates newest bucket (0.5s) transaction count
+- Provides fresh data for flowing animation
+
+**SYSTEM 2: Flowing Timeline Animation**  
+- Runs every 500ms independently
+- Shifts ALL data one position left (aging effect)
+- Injects new real-time data on rightmost edge
+- Creates continuous chronological flow
+
+8.2 VISUAL BEHAVIOR SPECIFICATION
+----------------------------------
+**TIME BUCKET MOVEMENT PATTERN:**
+```
+Every 500ms:
+Old "1s" value → moves to → "1.5s" bucket
+Old "1.5s" value → moves to → "2s" bucket  
+Old "2s" value → moves to → "2.5s" bucket
+...continuing leftward...
+Old "9.5s" value → moves to → "10s" bucket
+Old "10s" value → disappears (aged out)
+NEW real-time count → appears at → "0.5s" bucket
+```
+
+**EXPECTED USER OBSERVATION:**
+- Data visibly "flows" from right (new) to left (old)
+- Bars shift positions creating conveyor belt effect
+- Newest transactions always appear on right edge
+- Oldest data disappears from left edge after 10 seconds
+- Color changes: Bright blue (newest) → Gray (oldest)
+
+8.3 TECHNICAL IMPLEMENTATION DETAILS
+-------------------------------------
+**Initialization Phase:**
+1. Chart loads once with current transaction distribution
+2. All time buckets populated based on transaction ages
+3. Initial data provides baseline for flowing animation
+
+**Flowing Animation Phase:**
+1. **Timer**: setInterval runs every 500ms
+2. **Shifting**: Each bucket adopts value from bucket to its right
+3. **Aging**: Leftmost bucket (10s) cleared to 0
+4. **Fresh Data**: Rightmost bucket (0.5s) gets new transaction count
+5. **Visual Update**: Recharts re-renders with smooth 400ms transitions
+
+**Debug Console Output:**
+```
+⚡ Shifting chart data right → left
+🆕 Adding to rightmost bucket: 3
+```
+
+8.4 PERFORMANCE & USER EXPERIENCE
+----------------------------------
+**TIMING OPTIMIZATION:**
+- 500ms shifting interval = visible but smooth movement
+- 400ms animation duration = responsive visual feedback
+- Perfect balance between real-time feel and clarity
+
+**VISUAL FEEDBACK INDICATORS:**
+- Glowing chart container (real-time status)
+- Flow direction arrows (← ← ←)
+- Color-coded data age (bright → dim)
+- Smooth transitions (professional appearance)
+
+**USER INTERACTION PATTERNS:**
+- **"Start Auto"** → Continuous flowing with steady transaction rate
+- **"Simulate Surge"** → Dramatic flow acceleration during peaks
+- **Normal Operation** → Gentle flowing with occasional spikes
+
+================================================================
+FINAL RESULT SUMMARY
+================================================================
+
+**BEFORE:** Static bar chart showing transaction counts per time period
+**AFTER:** Dynamic flowing timeline with chronological data movement
+
+✅ **Data flows RIGHT → LEFT** (newest to oldest)
+✅ **Automatic shifting every 0.5 seconds** creates timeline effect  
+✅ **Real-time transaction data** appears on rightmost edge
+✅ **Visual aging** as data moves from bright blue to gray
+✅ **Smooth animations** with professional visual feedback
+✅ **Intuitive user experience** - like watching a live conveyor belt
+
+The chart now provides an engaging, intuitive way to monitor transaction volume in real-time, with obvious visual cues that data is flowing and updating continuously. Users can immediately understand:
+- Where new activity appears (right edge)
+- How data ages over time (flows left)  
+- System activity level (flow speed and bar heights)
+- Historical transaction patterns (10-second rolling window)

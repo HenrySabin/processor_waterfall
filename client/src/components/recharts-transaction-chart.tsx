@@ -43,14 +43,9 @@ export default function RechartsTransactionChart({ transactions = [] }: Recharts
     }).length;
   }, [transactions]);
 
-  // Initialize chart data and update when transactions change
+  // Initialize chart data ONCE on mount - flowing animation will handle updates
   useEffect(() => {
-    console.log('🔄 Chart updating with transactions:', transactions?.length || 0, 'transactions');
-    console.log('📊 First few transactions:', transactions?.slice(0, 3)?.map(tx => ({
-      id: tx.id?.substring(0, 8) + '...',
-      createdAt: tx.createdAt,
-      ageSeconds: ((Date.now() - new Date(tx.createdAt).getTime()) / 1000).toFixed(1)
-    })));
+    console.log('🔄 Chart initializing with transactions:', transactions?.length || 0, 'transactions');
     
     const now = Date.now();
     const initialData = timeLabels.map(timeSlot => {
@@ -65,27 +60,48 @@ export default function RechartsTransactionChart({ transactions = [] }: Recharts
       };
     });
     
-    console.log('📈 Chart data calculated:', initialData.map(d => `${d.name}:${d.count}`).join(', '));
+    console.log('📈 Initial chart data:', initialData.map(d => `${d.name}:${d.count}`).join(', '));
     setChartData(initialData);
-  }, [transactions]); // ← NOW responds to transaction changes!
+  }, []); // ← Only run ONCE on mount
 
-  // TEMPORARILY DISABLED: Set up shifting animation every 500ms
-  // We're testing if real transaction data updates work first
+  // ✅ FLOWING ANIMATION: Set up right-to-left shifting every 500ms
   useEffect(() => {
     // Clean up any existing intervals
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
     }
-    
-    // TODO: Re-enable shifting animation after verifying real data updates work
-    // intervalRef.current = setInterval(() => { ... }, 500);
+
+    intervalRef.current = setInterval(() => {
+      console.log('⚡ Shifting chart data right → left');
+      setChartData(prevData => {
+        if (prevData.length === 0) return prevData;
+        
+        // STEP 1: Shift all data one position left (older)
+        const shiftedData = prevData.map((item, index) => {
+          if (index === 0) {
+            // Leftmost bucket gets cleared (oldest data ages out)
+            return { ...item, count: 0 };
+          } else {
+            // Each bucket takes the value from the bucket to its right
+            return { ...item, count: prevData[index - 1].count };
+          }
+        });
+        
+        // STEP 2: Add NEW real-time data to rightmost bucket (newest)
+        const newestCount = calculateNewestBucketCount();
+        console.log('🆕 Adding to rightmost bucket:', newestCount);
+        shiftedData[shiftedData.length - 1].count = newestCount;
+        
+        return shiftedData;
+      });
+    }, 500); // Shift every 0.5 seconds to create flowing effect
     
     return () => {
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
       }
     };
-  }, []);
+  }, [calculateNewestBucketCount]); // Re-run when calculation function changes
 
   return (
     <div style={{ position: 'relative', height: '200px' }} data-testid="recharts-transaction-chart">
