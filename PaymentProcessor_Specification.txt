@@ -1,0 +1,710 @@
+PAYMENT PROCESSOR DASHBOARD - TECHNICAL SPECIFICATION
+===========================================================
+
+TABLE OF CONTENTS
+1. System Overview
+2. Component Architecture  
+3. User Interface Specifications
+4. Data Models & API Interfaces
+5. Real-Time WebSocket Implementation
+6. Demo & Automation Features
+7. Visual Design Guidelines
+8. Technical Requirements
+9. Testing Requirements
+
+===========================================================
+1. SYSTEM OVERVIEW
+===========================================================
+
+The PaymentProcessor Dashboard is a comprehensive real-time monitoring interface for a payment waterfall system. It provides live transaction monitoring, processor health tracking, system metrics, and automated testing capabilities.
+
+Core Features:
+- Real-time transaction volume visualization with bar charts
+- Live processor status monitoring with toggle controls
+- WebSocket-based real-time updates (no polling)
+- Automated transaction generation with configurable modes
+- High-speed surge simulation (300 transactions, exponential acceleration to 200+ TPS)
+- System health monitoring with circuit breaker status
+- Recent transaction history with pagination
+- Quick action tools for testing and maintenance
+
+Technology Stack:
+- Frontend: React + TypeScript + Shopify Polaris Design System
+- Charts: Recharts library with custom bar chart implementation
+- Real-time: WebSocket connection with automatic reconnection
+- State Management: TanStack Query for server state
+- Routing: Wouter for client-side navigation
+- UI Components: Shadcn/UI components with Shopify Polaris
+
+===========================================================
+2. COMPONENT ARCHITECTURE
+===========================================================
+
+Main Dashboard Component (dashboard.tsx)
+├── Navigation & Layout
+├── Metrics Grid
+├── Transaction Volume Chart
+├── Processor Status Grid
+├── Recent Transactions Table
+├── System Health Panel
+└── Quick Actions Panel
+
+2.1 DASHBOARD MAIN COMPONENT
+-----------------------------
+- File: client/src/pages/dashboard.tsx
+- Purpose: Main dashboard container with WebSocket integration
+- State Management: Local state for demo controls, WebSocket data consumption
+
+Key State Variables:
+- mobileNavigationActive: boolean (mobile nav toggle)
+- demoRunning: boolean (surge demo status)
+- demoProgress: {current: number, total: number} (demo progress tracking)
+- autoMode: boolean (auto-generation mode status)
+- autoInterval: NodeJS.Timeout | null (auto-generation timer)
+
+Key Methods:
+- runStaggeredDemo(): Executes 300-transaction exponential surge simulation
+- generateRandomTransactions(): Creates 1-3 random transactions every 2 seconds
+- startAutoMode() / stopAutoMode(): Controls automated transaction generation
+
+2.2 METRICS GRID COMPONENT
+---------------------------
+- File: client/src/components/metrics-grid.tsx
+- Purpose: Display key system metrics in a 4-card grid layout
+- Props: stats (SystemStats interface)
+
+Card Structure:
+1. Total Transactions - Running count with formatted numbers
+2. Success Rate - Percentage with trend indicator
+3. Average Response Time - Milliseconds with performance indicator
+4. Active Processors - Count with system status
+
+Visual Design:
+- Grid layout: repeat(auto-fit, minmax(250px, 1fr))
+- Each card has colored accent circle with metric-specific color
+- Trend indicators with arrows and change descriptions
+- Test IDs for all interactive elements
+
+2.3 TRANSACTION CHART COMPONENT
+--------------------------------
+- File: client/src/components/recharts-transaction-chart.tsx
+- Purpose: Real-time bar chart showing transaction volume over time
+- Chart Library: Recharts with custom configuration
+
+Chart Configuration:
+- Chart Type: BarChart (switched from AreaChart for instant updates)
+- Time Buckets: 20 time slots from 10s ago to 0.5s ago (0.5s intervals)
+- Y-axis: Fixed domain [1, 10] for consistent scaling
+- Animations: Disabled (isAnimationActive: false) for instant updates
+- Data Updates: Real-time via WebSocket transaction data
+
+Time Bucket Logic:
+```
+timeLabels = [
+  { label: "10s", rangeStart: 9.5, rangeEnd: 10 },
+  { label: "9.5s", rangeStart: 9, rangeEnd: 9.5 },
+  ...continuing in 0.5s intervals...
+  { label: "0.5s", rangeStart: 0, rangeEnd: 0.5 }
+]
+```
+
+Data Processing:
+- Filter transactions by createdAt timestamp
+- Calculate age in seconds: (now - createdAt) / 1000
+- Count transactions in each time bucket
+- Update chart data on every WebSocket message
+
+2.4 PROCESSOR STATUS COMPONENT
+-------------------------------
+- File: client/src/components/processor-status.tsx
+- Purpose: Display and control payment processor status
+- Props: processors (ProcessorStatus[] interface)
+
+Table Structure:
+- Columns: Processor Name, Priority, Success Rate, Actions
+- Custom toggle switches for enable/disable functionality
+- Status indicators: colored dots showing processor health
+- Show/hide functionality for large processor lists (default: show 10)
+
+Status Colors:
+- Green (#10B981): Active and healthy
+- Red (#EF4444): Circuit breaker open
+- Yellow (#F59E0B): Warning (consecutive failures > 0)  
+- Gray (#9CA3AF): Disabled
+
+Toggle Switch Styling:
+- Custom CSS implementation with smooth transitions
+- Disabled state during mutation operations
+- Visual feedback for pending operations
+
+2.5 RECENT TRANSACTIONS COMPONENT
+----------------------------------
+- File: client/src/components/recent-transactions.tsx
+- Purpose: Tabular display of recent transaction history
+- Data Source: WebSocket transactions with pagination
+
+Table Columns:
+1. Transaction ID (truncated to 12 chars)
+2. Amount (formatted with currency)
+3. Processor (lookup from processor ID)
+4. Status (badge with color coding)
+5. Time (relative time using date-fns)
+
+Status Badge Colors:
+- Success: Green background
+- Failed: Red background  
+- Pending: Blue background
+- Default: Gray background
+
+Pagination:
+- Items per page: 10
+- Navigation: Previous/Next buttons
+- Display: "Showing X to Y of Z transactions"
+- Disabled states for boundary conditions
+
+2.6 SYSTEM HEALTH COMPONENT
+----------------------------
+- File: client/src/components/system-health.tsx
+- Purpose: Monitor overall system health and smart contract status
+- Props: health (HealthCheck interface)
+
+Health Items:
+1. API Health - Overall system status
+2. Database - Database connectivity
+3. Circuit Breaker - Count of open circuit breakers
+4. Rate Limiting - Rate limit status
+
+Smart Contract Section:
+- Algorand Network connectivity status
+- Contract Client status
+- Connection indicators with color coding
+
+Health Check Button:
+- Manual trigger for system health validation
+- Full-width button with loading states
+- Triggers mutation with toast feedback
+
+2.7 QUICK ACTIONS COMPONENT
+----------------------------
+- File: client/src/components/quick-actions.tsx
+- Purpose: Provide common administrative actions
+- Layout: 3-column grid on desktop, 1-column on mobile
+
+Available Actions:
+1. Test Payment - Process $10 test transaction
+2. Export Logs - Download system logs as CSV
+3. Update Config - Configuration panel (placeholder)
+
+Button Design:
+- Ghost variant with hover effects
+- Icon + text layout with descriptions
+- Loading states with spinning icons
+- Individual mutation handling per action
+
+===========================================================
+3. USER INTERFACE SPECIFICATIONS
+===========================================================
+
+3.1 LAYOUT STRUCTURE
+---------------------
+Framework Layout (Shopify Polaris):
+- Frame component as root container
+- TopBar with navigation toggle and action buttons
+- Navigation sidebar with section-based menu
+- Page component with title and subtitle
+- Layout.Section containers for component organization
+
+Navigation Menu:
+- Dashboard (selected by default)
+- Processors
+- Transactions  
+- Health
+- Configuration
+
+TopBar Elements:
+- Navigation toggle (mobile)
+- System status badge (dynamic color)
+- Refresh button
+- Simulate Surge button with progress indicator
+- Auto mode toggle button
+
+3.2 RESPONSIVE DESIGN
+---------------------
+Breakpoints:
+- Mobile: < 768px (single column layout)
+- Tablet: 768px - 1024px (2-column grid)
+- Desktop: > 1024px (full grid layout)
+
+Grid Specifications:
+- Metrics Grid: repeat(auto-fit, minmax(250px, 1fr))
+- Processor/Transactions Grid: 1fr 1fr (2-column)
+- Quick Actions: grid-cols-1 md:grid-cols-3
+
+Mobile Adaptations:
+- Collapsible navigation with hamburger menu
+- Stacked card layouts
+- Horizontal scroll for tables
+- Reduced padding and font sizes
+
+3.3 COLOR SCHEME & STYLING
+---------------------------
+Primary Colors:
+- Blue (#3b82f6): Primary actions, chart bars
+- Green (#10B981): Success states, healthy status
+- Red (#EF4444): Error states, critical alerts
+- Yellow (#F59E0B): Warning states
+- Gray (#6b7280): Neutral text, disabled states
+
+Chart Colors:
+- Bar Fill: #3b82f6 (blue)
+- Grid Lines: #e5e7eb (light gray)
+- Text: #6b7280 (medium gray)
+- Background: White/transparent
+
+Status Indicators:
+- Healthy: #10B981
+- Warning: #F59E0B  
+- Critical: #EF4444
+- Disabled: #9CA3AF
+
+Typography:
+- Headers: Shopify Polaris heading variants
+- Body Text: Polaris bodyMd
+- Metrics: Polaris headingXl for values
+- Monospace: Used for transaction IDs
+
+===========================================================
+4. DATA MODELS & API INTERFACES
+===========================================================
+
+4.1 CORE INTERFACES
+--------------------
+
+SystemStats Interface:
+```typescript
+interface SystemStats {
+  totalTransactions: number;
+  successRate: number;
+  avgResponseTime: number;
+  activeProcessors: number;
+}
+```
+
+Transaction Interface:
+```typescript
+interface Transaction {
+  id: string;
+  amount: string;
+  currency: string;
+  status: 'success' | 'pending' | 'failed';
+  processorId: string | null;
+  processorTransactionId: string | null;
+  failureReason: string | null;
+  attemptedProcessors: string[];
+  metadata: unknown;
+  createdAt: Date;
+  updatedAt: Date;
+  processingTime: number | null;
+}
+```
+
+ProcessorStatus Interface:
+```typescript
+interface ProcessorStatus {
+  id: string;
+  name: string;
+  type: string;
+  enabled: boolean;
+  circuitBreakerOpen: boolean;
+  priority: number;
+  successRate: string;
+  avgResponseTime: number;
+  consecutiveFailures: number;
+  lastFailureTime: string | null;
+}
+```
+
+HealthCheck Interface:
+```typescript
+interface HealthCheck {
+  status: string;
+  uptime: number;
+  memory: any;
+  system: {
+    api?: string;
+    database?: string;
+    totalTransactions: number;
+    successRate: number;
+    avgResponseTime: number;
+    activeProcessors: number;
+  };
+  processors: ProcessorStatus[];
+  circuitBreakers: any;
+  algorand?: {
+    connected: boolean;
+  };
+  smartContract?: {
+    connected: boolean;
+  };
+  timestamp: string;
+}
+```
+
+4.2 API ENDPOINTS
+-----------------
+
+Payment Processing:
+- POST /api/payments - Process single payment
+  Request: { amount: string, currency: string, metadata: object }
+  Response: { success: boolean, transactionId: string }
+
+Processor Management:
+- GET /api/processors - List all processors
+- POST /api/processors/:id/toggle - Enable/disable processor
+
+System Monitoring:
+- GET /api/metrics - Current system metrics
+- GET /api/health - System health check
+- POST /api/health/check - Trigger health check
+
+Transaction History:
+- GET /api/transactions - List transactions with pagination
+  Query: limit, offset, status filter
+
+Logging & Export:
+- GET /api/logs - Export system logs
+  Response: { logs: LogEntry[] }
+
+===========================================================
+5. REAL-TIME WEBSOCKET IMPLEMENTATION
+===========================================================
+
+5.1 WEBSOCKET CONNECTION
+-------------------------
+File: client/src/hooks/useWebSocket.ts
+
+Connection Details:
+- URL: ws://localhost:5000/ws (development) or wss://domain.com/ws (production)
+- Auto-reconnection with exponential backoff
+- Maximum 5 reconnection attempts
+- Base delay: 1000ms, exponential multiplier: 2
+
+Connection States:
+- isConnected: boolean - Connection status
+- error: string | null - Error message if connection fails
+- data: WebSocketData - Aggregated real-time data
+
+5.2 MESSAGE TYPES
+------------------
+
+Metrics Message:
+```typescript
+{
+  type: "metrics",
+  data: {
+    stats: SystemStats,
+    recentTransactions: Transaction[],
+    processors: ProcessorStatus[],
+    timestamp: string
+  }
+}
+```
+
+Transactions Message:
+```typescript
+{
+  type: "transactions", 
+  data: {
+    transactions: Transaction[],
+    pagination: { total: number, limit: number, offset: number },
+    timestamp: string
+  }
+}
+```
+
+Health Message:
+```typescript
+{
+  type: "health",
+  data: HealthCheck
+}
+```
+
+5.3 DATA SYNCHRONIZATION
+-------------------------
+
+Update Frequency:
+- Metrics: Every 2 seconds
+- Transactions: On every new transaction
+- Health: Every 5 seconds
+
+State Management:
+- WebSocket data stored in hook state
+- Components subscribe to specific data slices
+- Automatic re-renders on data updates
+- No manual cache invalidation needed
+
+Error Handling:
+- Connection errors displayed to user
+- Graceful fallback to loading states
+- Reconnection attempts with user feedback
+- Manual reconnect button available
+
+===========================================================
+6. DEMO & AUTOMATION FEATURES
+===========================================================
+
+6.1 SURGE SIMULATION
+---------------------
+Function: runStaggeredDemo()
+
+Configuration:
+- Total Transactions: 300
+- Transaction Amounts: $45 - $2,445 (tripled from base $15-$815)
+- Acceleration Pattern: Exponential using cubic curve (Math.pow(progress, 3))
+- Timing: 500ms start delay → 5ms end delay (200+ TPS peak)
+
+Customer Pool (90 names):
+- Realistic name combinations
+- Cycled through for transaction variety
+- Metadata includes customer and product information
+
+Product Pool (30 products):
+- Enterprise software categories
+- Premium Plan, Enterprise License, etc.
+- Realistic business product names
+
+Exponential Timing Logic:
+```typescript
+const progress = i / (demoPayments.length - 1); // 0 to 1
+const exponentialFactor = Math.pow(progress, 3); // Cubic acceleration
+const delay = startDelay - (startDelay - endDelay) * exponentialFactor;
+```
+
+Progress Tracking:
+- Real-time progress indicator in button
+- Toast notifications for each payment
+- Success/failure counting
+- Final completion summary with success rate
+
+6.2 AUTO GENERATION MODE
+-------------------------
+Function: generateRandomTransactions()
+
+Configuration:
+- Frequency: Every 2 seconds
+- Transactions per batch: 1-3 (random)
+- Staggering: 200ms apart within batch
+- Transaction amounts: $45-$2,445 (tripled)
+
+Auto Mode Controls:
+- Start/Stop toggle button in TopBar
+- Visual indicator when active
+- Automatic cleanup on component unmount
+- Silent failure handling for background transactions
+
+6.3 DEMO CONTROLS
+------------------
+Button States:
+- Idle: "🚀 Simulate Surge"
+- Running: "Demo (X/300)" with progress
+- Loading indicator during execution
+
+Progress Indicators:
+- Button text updates with current/total
+- Console logging for debugging (payment timing details)
+- Toast notifications for individual payments
+- Final completion toast with statistics
+
+===========================================================
+7. VISUAL DESIGN GUIDELINES
+===========================================================
+
+7.1 COMPONENT SPACING
+----------------------
+Layout Spacing:
+- Card padding: 16px
+- Grid gaps: 20px
+- Section margins: 32px bottom
+- Element spacing: 8px (small), 16px (medium), 24px (large)
+
+Typography Spacing:
+- Header margins: 16px bottom
+- Paragraph spacing: 8px
+- List item spacing: 4px
+- Table cell padding: 12px vertical, 16px horizontal
+
+7.2 VISUAL HIERARCHY
+---------------------
+Header Levels:
+- Page Title: Polaris headingLg
+- Section Headers: Polaris headingMd
+- Subsection Headers: Polaris headingSm
+- Metric Values: Polaris headingXl
+
+Content Hierarchy:
+- Primary content: bodyMd weight normal
+- Secondary content: bodySm tone subdued
+- Success/Error states: bodyMd with semantic colors
+- Timestamps: bodySm tone subdued
+
+7.3 INTERACTIVE ELEMENTS
+-------------------------
+Button Styling:
+- Primary actions: Polaris primary button
+- Secondary actions: Polaris secondary button
+- Destructive actions: Destructive variant
+- Loading states: Built-in Polaris loading indicators
+
+Form Controls:
+- Custom toggle switches with smooth animations
+- Disabled states with reduced opacity
+- Focus states following Polaris accessibility guidelines
+- Error states with red border and error text
+
+Status Indicators:
+- Dot indicators: 8px circles with semantic colors
+- Badge components: Polaris Badge with appropriate tones
+- Progress bars: Custom implementation with smooth transitions
+- Loading spinners: Polaris Loading component
+
+===========================================================
+8. TECHNICAL REQUIREMENTS
+===========================================================
+
+8.1 DEPENDENCIES
+-----------------
+Core Framework:
+- React 18+ with TypeScript
+- @shopify/polaris (design system)
+- @shopify/polaris-icons (icon library)
+
+Data Management:
+- @tanstack/react-query (server state)
+- date-fns (date formatting)
+
+Routing & Navigation:
+- wouter (lightweight router)
+
+Charts & Visualization:
+- recharts (chart library)
+- Custom chart configurations
+
+Development Tools:
+- Vite (build tool)
+- TypeScript (type checking)
+- ESLint + Prettier (code quality)
+
+8.2 BROWSER SUPPORT
+--------------------
+Minimum Requirements:
+- Chrome 90+
+- Firefox 88+  
+- Safari 14+
+- Edge 90+
+
+Features Required:
+- WebSocket support
+- ES2020 features
+- CSS Grid and Flexbox
+- Modern JavaScript (async/await, destructuring)
+
+8.3 PERFORMANCE REQUIREMENTS
+-----------------------------
+Real-time Updates:
+- WebSocket message processing: < 10ms
+- Chart re-renders: < 50ms
+- Component updates: < 100ms
+
+Memory Management:
+- WebSocket connection cleanup on unmount
+- Timer cleanup for auto-generation
+- Query cache management via TanStack Query
+
+Bundle Optimization:
+- Tree shaking for unused code
+- Lazy loading for non-critical components
+- Efficient re-rendering patterns
+
+8.4 ACCESSIBILITY REQUIREMENTS
+-------------------------------
+WCAG 2.1 Compliance:
+- Keyboard navigation support
+- Screen reader compatibility
+- Color contrast ratios: 4.5:1 minimum
+- Focus indicators on all interactive elements
+
+Aria Labels:
+- data-testid attributes on all interactive elements
+- Descriptive button labels
+- Status announcements for screen readers
+- Table headers properly associated
+
+Responsive Design:
+- Mobile-first approach
+- Touch-friendly target sizes (44px minimum)
+- Readable text at all zoom levels
+- No horizontal scrolling on mobile
+
+===========================================================
+9. TESTING REQUIREMENTS
+===========================================================
+
+9.1 COMPONENT TESTING
+----------------------
+Unit Tests Required:
+- Individual component rendering
+- Props handling and default values
+- Event handlers and state updates
+- Error boundary behavior
+
+Integration Tests:
+- WebSocket connection and message handling
+- API mutation success/error flows
+- Multi-component interactions
+- Real-time data synchronization
+
+9.2 TEST IDS & SELECTORS
+-------------------------
+Required Test IDs:
+- All buttons: button-{action-name}
+- All interactive elements: {component}-{element}
+- Status indicators: status-{type}
+- Form inputs: input-{field-name}
+- Navigation links: link-{destination}
+
+Examples:
+- button-simulate-surge
+- button-test-payment
+- metric-total-transactions
+- transaction-row-{id}
+- processor-toggle-{id}
+
+9.3 E2E TEST SCENARIOS
+-----------------------
+Critical User Flows:
+1. Dashboard loads with all components visible
+2. Real-time updates display correctly
+3. Surge simulation runs to completion
+4. Auto-generation mode starts/stops correctly
+5. Processor toggle functionality works
+6. Health check triggers successfully
+
+Performance Tests:
+- Page load time under 3 seconds
+- Real-time updates without UI blocking
+- Memory usage stability over extended periods
+- WebSocket reconnection reliability
+
+===========================================================
+IMPLEMENTATION NOTES
+===========================================================
+
+1. Start with the main Dashboard component and WebSocket hook
+2. Implement components in order of dependency (metrics → chart → status)
+3. Add real-time functionality after basic components work
+4. Implement demo features last (they depend on all other components)
+5. Test thoroughly on all supported browsers and devices
+6. Validate WebSocket behavior under various network conditions
+
+This specification provides complete implementation guidance for recreating the PaymentProcessor dashboard with all its features and functionality.
