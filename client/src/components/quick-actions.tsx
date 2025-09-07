@@ -7,8 +7,6 @@ import { api } from "@/lib/api";
 export default function QuickActions() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [demoRunning, setDemoRunning] = useState(false);
-  const [demoProgress, setDemoProgress] = useState({ current: 0, total: 100 });
 
   const testPaymentMutation = useMutation({
     mutationFn: () => api.processPayment({
@@ -185,15 +183,6 @@ export default function QuickActions() {
   });
 
   const actions = [
-    {
-      title: demoRunning ? `🚀 Demo Running (${demoProgress.current}/${demoProgress.total})` : "🚀 Demo Mode",
-      description: demoRunning ? "High-volume transactions streaming..." : "Simulate 100 payments in 10 seconds",
-      icon: "fas fa-rocket",
-      action: () => runStaggeredDemo(),
-      loading: demoRunning,
-      testId: "button-demo-simulation",
-      featured: true,
-    },
     {
       title: "Test Payment",
       description: "Run test transaction",
