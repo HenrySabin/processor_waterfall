@@ -34,30 +34,8 @@ export default function RechartsTransactionChart({ transactions = [] }: Recharts
     { label: "0.5s", rangeStart: 0, rangeEnd: 0.5 }      // Rightmost (newest)
   ];
 
-  // Calculate newest bucket count (rightmost - most recent 0.5s)
-  const calculateNewestBucketCount = useCallback(() => {
-    const now = Date.now();
-    console.log('🔍 Calculating newest bucket...');
-    console.log('🔍 Current time:', now);
-    console.log('🔍 Total transactions available:', transactions.length);
-    
-    // Check the first 5 transactions to see their ages
-    const firstFew = transactions.slice(0, 5).map(tx => ({
-      id: tx.id.substring(0, 8),
-      createdAt: tx.createdAt,
-      ageSeconds: ((now - new Date(tx.createdAt).getTime()) / 1000).toFixed(2)
-    }));
-    console.log('🔍 First 5 transactions with ages:', firstFew);
-    
-    const recentTransactions = transactions.filter(tx => {
-      const ageInSeconds = (now - new Date(tx.createdAt).getTime()) / 1000;
-      return ageInSeconds >= 0 && ageInSeconds < 0.5;
-    });
-    
-    console.log('🔍 Transactions in 0-0.5s range:', recentTransactions.length);
-    
-    return recentTransactions.length;
-  }, [transactions]);
+  // Removed calculateNewestBucketCount to avoid closure issues
+  // Now calculating fresh data directly in the shifting animation
 
   // Initialize chart data when transactions arrive - flowing animation will handle updates
   useEffect(() => {
@@ -109,8 +87,18 @@ export default function RechartsTransactionChart({ transactions = [] }: Recharts
         });
         
         // STEP 2: Add NEW real-time data to rightmost bucket (newest)
-        const newestCount = calculateNewestBucketCount();
+        // Calculate fresh count directly to avoid stale closure issues
+        const now = Date.now();
+        const newestCount = transactions.filter(tx => {
+          const ageInSeconds = (now - new Date(tx.createdAt).getTime()) / 1000;
+          return ageInSeconds >= 0 && ageInSeconds < 0.5;
+        }).length;
+        
         console.log('🆕 Adding to rightmost bucket:', newestCount);
+        console.log('🔍 Live calc - transactions available:', transactions.length);
+        console.log('🔍 Live calc - newest transaction age:', transactions.length > 0 ? 
+          ((now - new Date(transactions[0].createdAt).getTime()) / 1000).toFixed(2) + 's' : 'none');
+        
         shiftedData[shiftedData.length - 1].count = newestCount;
         
         return shiftedData;
@@ -122,7 +110,7 @@ export default function RechartsTransactionChart({ transactions = [] }: Recharts
         clearInterval(intervalRef.current);
       }
     };
-  }, [calculateNewestBucketCount]); // Re-run when calculation function changes
+  }, [transactions]); // Re-run when transactions change to get fresh data
 
   return (
     <div style={{ position: 'relative', height: '200px' }} data-testid="recharts-transaction-chart">
