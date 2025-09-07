@@ -93,8 +93,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (result.success) {
         // Broadcast real-time updates via WebSocket
         try {
+          logger.info('Broadcasting WebSocket updates after transaction', 'websocket');
           (global as any).wsMetricsUpdate?.();
           (global as any).wsTransactionsUpdate?.();
+          logger.info('WebSocket updates broadcast completed', 'websocket');
         } catch (wsError) {
           logger.error('Failed to broadcast WebSocket updates', 'websocket', wsError instanceof Error ? wsError : undefined);
         }
@@ -515,6 +517,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // WebSocket broadcast functions
   async function broadcastToClients(message: any) {
     const data = JSON.stringify(message);
+    logger.info(`Broadcasting to ${clients.size} WebSocket clients`, 'websocket', { messageType: message.type });
     clients.forEach(client => {
       if (client.readyState === WebSocket.OPEN) {
         client.send(data);
@@ -525,14 +528,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   async function sendMetricsUpdate(client?: WebSocket) {
     try {
       const systemStats = await storage.getSystemStats();
-      const recentTransactions = await storage.getTransactions(100, 0);
+      const recentTransactionsResult = await storage.getTransactions(100, 0);
       const processorStatus = await paymentProcessor.getProcessorStatus();
       
       const message = {
         type: 'metrics',
         data: {
           stats: systemStats,
-          recentTransactions: recentTransactions.transactions,
+          recentTransactions: recentTransactionsResult.transactions,
           processors: processorStatus,
           timestamp: new Date().toISOString()
         }

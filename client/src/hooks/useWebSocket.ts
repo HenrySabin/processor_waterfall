@@ -69,6 +69,7 @@ export function useWebSocket(): UseWebSocketReturn {
       ws.onmessage = (event) => {
         try {
           const message = JSON.parse(event.data);
+          console.log('WebSocket message received:', message.type, message);
           
           setData(prevData => ({
             ...prevData,
