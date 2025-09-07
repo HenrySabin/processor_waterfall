@@ -21,17 +21,11 @@ export default function Dashboard() {
   const [demoProgress, setDemoProgress] = useState({ current: 0, total: 100 });
   const [autoMode, setAutoMode] = useState(false);
   const [autoInterval, setAutoInterval] = useState<NodeJS.Timeout | null>(null);
-  const [chartMode, setChartMode] = useState<'realtime' | 'flowing'>('realtime');
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
   // Replace HTTP polling with WebSocket
   const { data: wsData, isConnected, error: wsError } = useWebSocket();
-  
-  // 🔍 DEBUG: Log WebSocket data state
-  console.log('🚀 Dashboard render - wsData keys:', Object.keys(wsData || {}));
-  console.log('🚀 wsData.transactions exists:', !!wsData.transactions);
-  console.log('🚀 wsData.transactions count:', wsData.transactions?.transactions?.length || 0);
   
   // Use WebSocket data instead of HTTP requests
   const metrics = wsData.metrics;
@@ -365,46 +359,20 @@ export default function Dashboard() {
               <div style={{ padding: '16px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <Text variant="headingMd" as="h2">Transaction Volume</Text>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <Button 
-                        size="slim" 
-                        variant={chartMode === 'realtime' ? 'primary' : 'secondary'}
-                        onClick={() => setChartMode('realtime')}
-                        data-testid="button-realtime-mode"
-                      >
-                        📊 Real-time
-                      </Button>
-                      <Button 
-                        size="slim" 
-                        variant={chartMode === 'flowing' ? 'primary' : 'secondary'}
-                        onClick={() => setChartMode('flowing')}
-                        data-testid="button-flowing-mode"
-                      >
-                        🚀 Flowing
-                      </Button>
-                    </div>
-                    <div style={{
-                      color: '#ef4444',
-                      fontSize: '14px',
-                      fontWeight: 'bold',
-                      backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                      padding: '4px 8px',
-                      borderRadius: '4px',
-                      boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
-                    }}>
-                      ● LIVE
-                    </div>
+                  <div style={{
+                    color: '#ef4444',
+                    fontSize: '14px',
+                    fontWeight: 'bold',
+                    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                    padding: '4px 8px',
+                    borderRadius: '4px',
+                    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
+                  }}>
+                    ● LIVE
                   </div>
                 </div>
                 <div style={{ marginTop: '16px', height: '200px' }}>
-                  {(() => {
-                    const chartTransactions = wsData.transactions?.transactions || wsData.metrics?.recentTransactions || [];
-                    console.log('🎯 Dashboard passing to chart:', chartTransactions?.length || 0, 'transactions');
-                    console.log('🔍 wsData.transactions:', wsData.transactions ? 'exists' : 'null');
-                    console.log('🔍 wsData.metrics?.recentTransactions:', wsData.metrics?.recentTransactions?.length || 0);
-                    return <RechartsTransactionChart transactions={chartTransactions} mode={chartMode} />;
-                  })()}
+                  <RechartsTransactionChart transactions={wsData.transactions?.transactions || wsData.metrics?.recentTransactions || []} />
                 </div>
               </div>
             </Card>
