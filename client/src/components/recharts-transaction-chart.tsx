@@ -99,7 +99,7 @@ export default function RechartsTransactionChart({ transactions = [] }: Recharts
               stroke="#3b82f6"
               strokeWidth={2}
               fill="url(#colorGradient)"
-              animationDuration={750}
+              isAnimationActive={false}
             />
           </AreaChart>
         </ResponsiveContainer>
