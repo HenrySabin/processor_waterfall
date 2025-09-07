@@ -40,16 +40,39 @@ export default function RechartsTransactionChart({ transactions = [], mode = 're
 
   // Mode-specific chart logic
   useEffect(() => {
+    console.log('🔄 Chart useEffect triggered:', { 
+      transactionsLength: transactions?.length || 0, 
+      mode,
+      firstTransaction: transactions?.[0]?.id || 'none'
+    });
+    
     if (!transactions || transactions.length === 0) {
       console.log('🔄 Chart waiting for transactions...');
+      // Initialize empty chart for display
+      const emptyData = timeLabels.map(timeSlot => ({
+        name: timeSlot.label,
+        count: 0
+      }));
+      setChartData(emptyData);
       return;
     }
     
     console.log(`🔄 Chart initializing in ${mode} mode with ${transactions.length} transactions`);
+    console.log('🔍 First transaction:', transactions[0]);
+    console.log('🔍 First transaction age:', 
+      transactions[0] ? (Date.now() - new Date(transactions[0].createdAt).getTime()) / 1000 + 's' : 'none');
     
     if (mode === 'realtime') {
       // REAL-TIME MODE: Recalculate all buckets based on actual transaction ages
       const now = Date.now();
+      
+      // Debug: Check transaction ages
+      const ages = transactions.slice(0, 5).map(tx => ({
+        id: tx.id.slice(-8),
+        age: ((now - new Date(tx.createdAt).getTime()) / 1000).toFixed(1) + 's'
+      }));
+      console.log('🔍 Transaction ages (first 5):', ages);
+      
       const initialData = timeLabels.map(timeSlot => {
         const count = transactions.filter(tx => {
           const ageInSeconds = (now - new Date(tx.createdAt).getTime()) / 1000;
@@ -61,6 +84,13 @@ export default function RechartsTransactionChart({ transactions = [], mode = 're
           count: count
         };
       });
+      
+      // Debug: Show bucket distribution
+      const nonZeroBuckets = initialData.filter(d => d.count > 0);
+      console.log('📊 Non-zero buckets:', nonZeroBuckets.map(d => `${d.name}:${d.count}`).join(', '));
+      if (nonZeroBuckets.length === 0) {
+        console.log('⚠️ All buckets are zero! All transactions might be older than 10 seconds');
+      }
       
       console.log('📊 Real-time chart data:', initialData.map(d => `${d.name}:${d.count}`).join(', '));
       setChartData(initialData);
@@ -106,7 +136,7 @@ export default function RechartsTransactionChart({ transactions = [], mode = 're
     }
 
     intervalRef.current = setInterval(() => {
-      console.log('🚀 Flowing: Shifting data left');
+      console.log('🚀 Flowing: Shifting data left every 0.5s');
       setChartData(prevData => {
         if (prevData.length === 0) return prevData;
         
@@ -128,7 +158,9 @@ export default function RechartsTransactionChart({ transactions = [], mode = 're
           return ageInSeconds >= 0 && ageInSeconds < 0.5;
         }).length;
         
-        console.log('🚀 Adding to rightmost bucket:', newestCount);
+        console.log('🚀 Flowing - adding to rightmost bucket:', newestCount, 'transactions');
+        console.log('🚀 Flowing - chart after shift:', shiftedData.map(d => `${d.name}:${d.count}`).join(', '));
+        
         shiftedData[shiftedData.length - 1].count = newestCount;
         
         return shiftedData;
