@@ -15,8 +15,16 @@ export default function RecentTransactions({}: RecentTransactionsProps) {
   const isLoading = !isConnected;
   
   const transactions = wsData.transactions?.transactions || [];
+  const processors = wsData.metrics?.processors || [];
   const totalTransactions = wsData.transactions?.pagination?.total || 0;
   const totalPages = Math.ceil(totalTransactions / itemsPerPage);
+
+  // Helper function to get processor name from processor ID
+  const getProcessorName = (processorId: string | null): string => {
+    if (!processorId) return 'N/A';
+    const processor = processors.find(p => p.id === processorId);
+    return processor?.name || 'Unknown';
+  };
   const getStatusBadgeColor = (status: string) => {
     switch (status) {
       case 'success':
@@ -100,7 +108,7 @@ export default function RecentTransactions({}: RecentTransactionsProps) {
                     ${transaction.amount} {transaction.currency}
                   </td>
                   <td className="py-3 px-4 text-sm text-foreground" data-testid={`transaction-processor-${transaction.id}`}>
-                    {transaction.processorId || 'N/A'}
+                    {getProcessorName(transaction.processorId)}
                   </td>
                   <td className="py-3 px-4" data-testid={`transaction-status-${transaction.id}`}>
                     <span className={`px-2 py-1 rounded text-xs capitalize ${getStatusBadgeColor(transaction.status)}`}>
