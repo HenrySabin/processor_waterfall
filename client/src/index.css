@@ -51,6 +51,28 @@
   --spacing: 0.25rem;
 }
 
+/* Make dashboard wider by overriding Polaris Layout constraints */
+.Polaris-Layout {
+  max-width: none !important;
+  width: 100% !important;
+}
+
+.Polaris-Layout__Section {
+  max-width: none !important;
+}
+
+.Polaris-Page {
+  max-width: none !important;
+  width: 100% !important;
+  padding-left: 1.5rem !important;
+  padding-right: 1.5rem !important;
+}
+
+.Polaris-Page__Content {
+  max-width: none !important;
+  width: 100% !important;
+}
+
 .dark {
   --background: hsl(0 0% 0%);
   --foreground: hsl(200 6.6667% 91.1765%);
