@@ -136,21 +136,18 @@ export default function Dashboard() {
         queryClient.invalidateQueries({ queryKey: ['/api/health'] });
         
         if (i < demoPayments.length - 1) {
-          // Create exponential acceleration surge: start aggressive, get exponentially faster
+          // Exponential acceleration: slower at start, massive acceleration to 100+ TPS
           const progress = i / (demoPayments.length - 1); // 0 to 1
           
-          // Ultra-aggressive exponential acceleration: builds to 100+ transactions per second
-          const ultraExponentialAcceleration = (t: number) => {
-            // Super aggressive exponential curve for 100+ TPS peak
-            return Math.pow(0.01, t * t); // Quadratic exponential decay
-          };
+          // Simple exponential curve: starts slow, accelerates massively
+          const exponentialFactor = Math.pow(progress, 3); // Cubic acceleration
           
-          const exponentialProgress = ultraExponentialAcceleration(progress);
+          // Delay calculation: starts at 500ms, ends at 5ms (200 TPS)
+          const startDelay = 500;
+          const endDelay = 5;
+          const delay = startDelay - (startDelay - endDelay) * exponentialFactor;
           
-          // Map to delay: start moderate (200ms), peak at 3ms (333 TPS)
-          const startDelay = 200;
-          const endDelay = 3; // 3ms = 333 transactions per second
-          const delay = endDelay + (startDelay - endDelay) * exponentialProgress;
+          console.log(`Payment ${i+1}: progress=${progress.toFixed(3)}, factor=${exponentialFactor.toFixed(3)}, delay=${delay.toFixed(1)}ms`);
           
           await new Promise(resolve => setTimeout(resolve, delay));
         }
