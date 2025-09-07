@@ -1,4 +1,4 @@
-import { Card, Text, Badge, Button, DataTable, ButtonGroup, Toast, Switch } from "@shopify/polaris";
+import { Card, Text, Badge, Button, DataTable, ButtonGroup, Toast } from "@shopify/polaris";
 import { useState, useCallback } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
@@ -80,12 +80,47 @@ export default function ProcessorStatus({ processors }: ProcessorStatusProps) {
     <Text variant="bodyMd" as="span" key={`success-${processor.id}`}>
       {processor.successRate}%
     </Text>,
-    <Switch
-      key={`toggle-${processor.id}`}
-      checked={processor.enabled}
-      onChange={() => toggleMutation.mutate(processor.id)}
-      disabled={toggleMutation.isPending}
-    />,
+    <div key={`toggle-${processor.id}`} style={{ display: 'flex', alignItems: 'center' }}>
+      <label style={{ 
+        position: 'relative', 
+        display: 'inline-block', 
+        width: '44px', 
+        height: '24px',
+        cursor: toggleMutation.isPending ? 'not-allowed' : 'pointer'
+      }}>
+        <input 
+          type="checkbox"
+          checked={processor.enabled}
+          onChange={() => !toggleMutation.isPending && toggleMutation.mutate(processor.id)}
+          disabled={toggleMutation.isPending}
+          style={{ opacity: 0, width: 0, height: 0 }}
+        />
+        <span style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: processor.enabled ? '#00b894' : '#ddd',
+          borderRadius: '24px',
+          transition: 'background-color 0.3s',
+          opacity: toggleMutation.isPending ? 0.5 : 1
+        }}>
+          <span style={{
+            position: 'absolute',
+            content: '',
+            height: '18px',
+            width: '18px',
+            left: processor.enabled ? '23px' : '3px',
+            bottom: '3px',
+            backgroundColor: 'white',
+            borderRadius: '50%',
+            transition: 'left 0.3s',
+            boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+          }} />
+        </span>
+      </label>
+    </div>,
   ]);
 
   const headings = [
