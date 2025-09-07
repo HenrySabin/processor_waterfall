@@ -80,8 +80,8 @@ export function useWebSocket(): UseWebSocketReturn {
         }
       };
 
-      ws.onclose = () => {
-        console.log('WebSocket disconnected');
+      ws.onclose = (event) => {
+        console.log('WebSocket disconnected:', { code: event.code, reason: event.reason, wasClean: event.wasClean });
         setIsConnected(false);
         
         // Attempt to reconnect with exponential backoff
@@ -100,6 +100,7 @@ export function useWebSocket(): UseWebSocketReturn {
 
       ws.onerror = (event) => {
         console.error('WebSocket error:', event);
+        console.error('WebSocket state when error occurred:', ws.readyState);
         setError('WebSocket connection error');
       };
 
@@ -116,13 +117,16 @@ export function useWebSocket(): UseWebSocketReturn {
   }, [connect]);
 
   useEffect(() => {
+    console.log('🔌 WebSocket useEffect triggered - connecting...');
     connect();
 
     return () => {
+      console.log('🔌 WebSocket useEffect cleanup - disconnecting...');
       if (reconnectTimeoutRef.current) {
         clearTimeout(reconnectTimeoutRef.current);
       }
       if (wsRef.current) {
+        console.log('🔌 Closing WebSocket connection...');
         wsRef.current.close();
       }
     };
