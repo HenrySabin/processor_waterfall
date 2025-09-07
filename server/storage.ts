@@ -23,6 +23,7 @@ export interface IStorage {
   // Transaction operations
   getTransaction(id: string): Promise<Transaction | undefined>;
   getTransactions(limit?: number, offset?: number): Promise<Transaction[]>;
+  getTotalTransactionCount(): Promise<number>;
   getRecentTransactions(limit?: number): Promise<Transaction[]>;
   createTransaction(transaction: InsertTransaction): Promise<Transaction>;
   updateTransaction(id: string, updates: Partial<Transaction>): Promise<Transaction | undefined>;
@@ -170,6 +171,10 @@ export class MemStorage implements IStorage {
     const allTransactions = Array.from(this.transactions.values())
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     return allTransactions.slice(offset, offset + limit);
+  }
+
+  async getTotalTransactionCount(): Promise<number> {
+    return this.transactions.size;
   }
 
   async getRecentTransactions(limit = 10): Promise<Transaction[]> {

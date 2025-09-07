@@ -228,7 +228,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const limit = Math.min(parseInt(req.query.limit as string) || 20, 100);
       const offset = Math.max(parseInt(req.query.offset as string) || 0, 0);
       
-      const transactions = await storage.getTransactions(limit, offset);
+      const [transactions, totalCount] = await Promise.all([
+        storage.getTransactions(limit, offset),
+        storage.getTotalTransactionCount()
+      ]);
       
       res.json({
         transactions: transactions.map(t => ({
@@ -244,7 +247,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         pagination: {
           limit,
           offset,
-          total: transactions.length,
+          total: totalCount,
         },
       });
     } catch (error) {
