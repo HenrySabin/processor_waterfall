@@ -96,7 +96,7 @@ export default function Dashboard() {
     
     const demoPayments = [];
     for (let i = 0; i < 100; i++) {
-      const amount = (Math.random() * 800 + 15).toFixed(2);
+      const amount = ((Math.random() * 800 + 15) * 3).toFixed(2);
       const customer = customers[i % customers.length];
       const product = products[i % products.length];
       
@@ -191,7 +191,7 @@ export default function Dashboard() {
       const delay = (i * 200); // 200ms apart
       
       setTimeout(async () => {
-        const amount = (Math.random() * 800 + 15).toFixed(2);
+        const amount = ((Math.random() * 800 + 15) * 3).toFixed(2);
         const customer = customers[Math.floor(Math.random() * customers.length)];
         const product = products[Math.floor(Math.random() * products.length)];
         
