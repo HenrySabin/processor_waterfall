@@ -339,7 +339,7 @@ export default function Dashboard() {
       <Page title="Payment Dashboard" subtitle="Monitor your payment processor waterfall system">
         <Layout>
           <Layout.Section>
-            <MetricsGrid stats={metrics?.stats || {}} />
+            <MetricsGrid stats={wsData.metrics?.stats || {}} />
           </Layout.Section>
           
           <Layout.Section>
@@ -360,7 +360,7 @@ export default function Dashboard() {
                   </div>
                 </div>
                 <div style={{ marginTop: '16px', height: '200px' }}>
-                  <RechartsTransactionChart transactions={metrics?.recentTransactions || []} />
+                  <RechartsTransactionChart transactions={wsData.transactions?.transactions || wsData.metrics?.recentTransactions || []} />
                 </div>
               </div>
             </Card>
@@ -371,11 +371,11 @@ export default function Dashboard() {
           </Layout.Section>
           
           <Layout.Section>
-            <ProcessorStatus processors={metrics?.processors || []} />
+            <ProcessorStatus processors={wsData.metrics?.processors || []} />
           </Layout.Section>
           
           <Layout.Section>
-            <SystemHealth health={health as any} />
+            <SystemHealth health={wsData.health || health as any} />
           </Layout.Section>
           
           <Layout.Section>
