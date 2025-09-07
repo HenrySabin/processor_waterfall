@@ -357,6 +357,121 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Demo simulation endpoint for hackathon demonstrations
+  app.post('/api/demo/simulate-load', async (req, res) => {
+    try {
+      logger.info('Demo payment load simulation started', 'api', { ip: req.ip });
+      
+      const demoPayments = [
+        // Initial successful burst
+        { amount: "25.99", currency: "USD", metadata: { demo: true, customer: "Alice Johnson", product: "Premium Plan" } },
+        { amount: "149.99", currency: "USD", metadata: { demo: true, customer: "Bob Smith", product: "Enterprise License" } },
+        { amount: "89.50", currency: "USD", metadata: { demo: true, customer: "Carol Davis", product: "Monthly Subscription" } },
+        { amount: "12.00", currency: "USD", metadata: { demo: true, customer: "David Wilson", product: "Basic Plan" } },
+        { amount: "299.99", currency: "USD", metadata: { demo: true, customer: "Eva Brown", product: "Yearly Premium" } },
+        
+        // More realistic transactions
+        { amount: "67.49", currency: "USD", metadata: { demo: true, customer: "Frank Miller", product: "Pro Tools" } },
+        { amount: "34.99", currency: "USD", metadata: { demo: true, customer: "Grace Lee", product: "Monthly Pro" } },
+        { amount: "156.00", currency: "USD", metadata: { demo: true, customer: "Henry Chang", product: "Team License" } },
+        { amount: "78.25", currency: "USD", metadata: { demo: true, customer: "Ivy Martinez", product: "Standard Plan" } },
+        { amount: "199.99", currency: "USD", metadata: { demo: true, customer: "Jack Thompson", product: "Annual Pro" } },
+        
+        // High-value transactions
+        { amount: "499.99", currency: "USD", metadata: { demo: true, customer: "Kelly Anderson", product: "Enterprise Suite" } },
+        { amount: "999.00", currency: "USD", metadata: { demo: true, customer: "Liam Rodriguez", product: "Corporate License" } },
+        { amount: "45.99", currency: "USD", metadata: { demo: true, customer: "Maya Patel", product: "Starter Pack" } },
+        { amount: "125.50", currency: "USD", metadata: { demo: true, customer: "Nathan Kim", product: "Developer Tools" } },
+        { amount: "379.99", currency: "USD", metadata: { demo: true, customer: "Olivia Green", product: "Team Premium" } },
+        
+        // More diverse amounts
+        { amount: "22.49", currency: "USD", metadata: { demo: true, customer: "Paul Walker", product: "Basic Tools" } },
+        { amount: "188.75", currency: "USD", metadata: { demo: true, customer: "Quinn Taylor", product: "Pro Suite" } },
+        { amount: "56.99", currency: "USD", metadata: { demo: true, customer: "Rachel White", product: "Monthly Basic" } },
+        { amount: "245.00", currency: "USD", metadata: { demo: true, customer: "Sam Johnson", product: "Quarterly Pro" } },
+        { amount: "99.99", currency: "USD", metadata: { demo: true, customer: "Tina Liu", product: "Standard Pro" } },
+        
+        // Final burst
+        { amount: "167.49", currency: "USD", metadata: { demo: true, customer: "Uma Shah", product: "Team Standard" } },
+        { amount: "89.99", currency: "USD", metadata: { demo: true, customer: "Victor Chen", product: "Monthly Plus" } },
+        { amount: "299.49", currency: "USD", metadata: { demo: true, customer: "Wendy Brooks", product: "Annual Team" } },
+        { amount: "139.99", currency: "USD", metadata: { demo: true, customer: "Xavier Jones", product: "Pro Monthly" } },
+        { amount: "459.99", currency: "USD", metadata: { demo: true, customer: "Yuki Tanaka", product: "Enterprise Pro" } }
+      ];
+
+      // Process payments with realistic timing
+      const results = [];
+      let successCount = 0;
+      let failureCount = 0;
+
+      for (let i = 0; i < demoPayments.length; i++) {
+        const payment = demoPayments[i];
+        
+        try {
+          const result = await paymentProcessor.processPayment(payment);
+          results.push({
+            paymentIndex: i + 1,
+            amount: payment.amount,
+            success: result.success,
+            processorUsed: result.processorUsed,
+            transactionId: result.transaction.id,
+            processingTime: result.totalProcessingTime
+          });
+          
+          if (result.success) {
+            successCount++;
+          } else {
+            failureCount++;
+          }
+          
+          // Add small delay between payments to simulate realistic load
+          if (i < demoPayments.length - 1) {
+            await new Promise(resolve => setTimeout(resolve, Math.random() * 300 + 100));
+          }
+        } catch (error) {
+          failureCount++;
+          results.push({
+            paymentIndex: i + 1,
+            amount: payment.amount,
+            success: false,
+            error: error instanceof Error ? error.message : 'Processing failed'
+          });
+        }
+      }
+
+      logger.info(
+        `Demo simulation completed: ${successCount} successful, ${failureCount} failed`,
+        'api',
+        { 
+          totalPayments: demoPayments.length,
+          successCount,
+          failureCount,
+          ip: req.ip 
+        }
+      );
+
+      res.json({
+        success: true,
+        message: 'Payment load simulation completed',
+        summary: {
+          totalPayments: demoPayments.length,
+          successfulPayments: successCount,
+          failedPayments: failureCount,
+          successRate: Math.round((successCount / demoPayments.length) * 100)
+        },
+        results: results.slice(0, 10) // Return first 10 results for reference
+      });
+
+    } catch (error) {
+      logger.error('Demo simulation error', 'api', error instanceof Error ? error : undefined);
+      res.status(500).json({
+        success: false,
+        error: 'Demo simulation failed',
+        message: 'Failed to run payment load simulation'
+      });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
