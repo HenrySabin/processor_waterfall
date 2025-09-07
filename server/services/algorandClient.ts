@@ -1,4 +1,5 @@
 import { logger } from "../utils/logger";
+import algosdk from 'algosdk';
 
 export interface ProcessorPriority {
   processorId: string;
@@ -18,6 +19,7 @@ export interface SmartContractConfig {
 export class AlgorandClient {
   private config: SmartContractConfig;
   private mockMode: boolean;
+  private algodClient: algosdk.Algodv2 | null = null;
 
   constructor(config?: SmartContractConfig) {
     this.config = {
@@ -32,13 +34,27 @@ export class AlgorandClient {
     // Use mock mode if no app ID is configured
     this.mockMode = !this.config.appId;
     
+    if (!this.mockMode) {
+      // Initialize real Algod client
+      try {
+        this.algodClient = new algosdk.Algodv2(
+          this.config.algodToken || '',
+          this.config.algodServer!,
+          this.config.algodPort || 443
+        );
+        logger.info(`Algorand client initialized for ${this.config.network}`, 'algorand-client', {
+          appId: this.config.appId,
+          server: this.config.algodServer,
+        });
+      } catch (error) {
+        logger.error('Failed to initialize Algorand client, falling back to mock mode', 'algorand-client', error instanceof Error ? error : undefined);
+        this.mockMode = true;
+        this.algodClient = null;
+      }
+    }
+    
     if (this.mockMode) {
       logger.info('Algorand client initialized in mock mode', 'algorand-client');
-    } else {
-      logger.info(`Algorand client initialized for ${this.config.network}`, 'algorand-client', {
-        appId: this.config.appId,
-        server: this.config.algodServer,
-      });
     }
   }
 
@@ -105,7 +121,7 @@ export class AlgorandClient {
     }
   }
 
-  async getContractStatus(): Promise<{ connected: boolean; network: string; appId?: number; error?: string }> {
+  async getContractStatus(): Promise<{ connected: boolean; network: string; appId?: number; error?: string; lastRound?: number; nodeVersion?: string }> {
     if (this.mockMode) {
       return {
         connected: true,
@@ -114,14 +130,47 @@ export class AlgorandClient {
       };
     }
 
+    if (!this.algodClient) {
+      return {
+        connected: false,
+        network: this.config.network,
+        appId: this.config.appId,
+        error: 'Algod client not initialized',
+      };
+    }
+
     try {
-      // In a real implementation, this would check the Algorand node connection
-      await new Promise(resolve => setTimeout(resolve, 50));
+      // Make real blockchain calls to test connectivity
+      const status = await this.algodClient.status().do();
+      
+      logger.debug('Algorand node status retrieved', 'algorand-client', {
+        lastRound: status['last-round'],
+        timeSinceLastRound: status['time-since-last-round'],
+        nodeVersion: status.build?.version
+      });
+      
+      // If we have an app ID, also check if the application exists
+      if (this.config.appId) {
+        try {
+          const appInfo = await this.algodClient.getApplicationByID(this.config.appId).do();
+          logger.debug('Smart contract found', 'algorand-client', {
+            appId: this.config.appId,
+            creator: appInfo.params.creator
+          });
+        } catch (appError) {
+          logger.warn('Smart contract not found or inaccessible', 'algorand-client', {
+            appId: this.config.appId,
+            error: appError instanceof Error ? appError.message : 'Unknown error'
+          });
+        }
+      }
       
       return {
         connected: true,
         network: this.config.network,
         appId: this.config.appId,
+        lastRound: status['last-round'],
+        nodeVersion: status.build?.version || 'unknown'
       };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Connection failed';
