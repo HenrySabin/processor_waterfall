@@ -1,0 +1,37 @@
+Build an app on Algorand where blockchain powers trustless payments, verifiable data, user-owned identity, or programmable digital assets; all with speed, simplicity, and global scale.
+
+Other potential options
+
+- Build a dApp on Algorand where AI agents enable autonomous commerce, peer-to-peer payments, decentralized lending, or real-time data exchange, all secured by transparency, auditability, and instant finality.
+
+- Create on Algorand the next generation of financial primitives: yield-bearing stablecoins, programmable payroll, modular lending markets, or cross-border microlending, all with low fees, global reach, and verifiable execution.
+
+- Develop a platform on Algorand that blends blockchain and AI: smart contract copilots, on-chain audits, decentralized model training, or tokenized feedback loops, combining trustless infrastructure with cutting-edge intelligence.
+
+- Build an open marketplace on Algorand for tokenized assets where users can trade commodities, real-world assets, digital identities, or synthetic yields, all with security, simplicity, and scale baked in.
+
+- Use Algorand to design the future of social and science applications: SocialFi, DeSci, proof of personhood, or stablecoin-powered credit, all with verifiable outcomes and user-owned data.
+
+===
+
+> **Submission requirements ✅**
+> 
+
+**Projects must:**
+
+1. Be built with smart contracts on Algorand 
+2. Be open source (and remain available as open source)
+3. Include a short summary (<150 chars)
+4. Include a full description (the problems it solves, how Algorand was used to achieve it)
+5. Include a technical description (what SDKs were used, and what features of Algorand made this uniquely possible)
+6. Include a link to the Canva slides used in the presentation (including a slide on your team, problem, solution etc). You must use Canva for your presentation (yes, this is a requirement).
+7. (For coding submissions) Have a custom (not boilerplate) smart contract on Algorand. All of this must be fully-functioning, as evidenced in a demo video on your README (see point 8 below).
+8. (For coding submissions) Include a clear README on your GitHub repo explaining how your project works. This README must include:
+    1. A demo video
+    2. Screenshots
+    3. A video with audio (e.g. a Loom video [like this](https://youtu.be/ZLKR4zE1o6U?si=6na7139wlVNkmJRa)) explaining how your project works, how the GitHub repo is structured, a demo of everything working etc. This is vital, so that the judges can review your project properly. Make sure you explain clearly how you satisfied point 7 above. This is a great example of a winning Polkadot project’s README: https://github.com/mahir-pa/poap.  Bonus points for if your video is well-edited!
+
+Please make sure you follow the above requirements very carefully.
+
+===
+
