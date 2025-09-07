@@ -40,15 +40,15 @@ export default function TransactionChart({ transactions }: TransactionChartProps
     let chartData: any[] = [];
 
     if (timePeriod === 'realtime') {
-      // Last 2 hours with 10-minute intervals
-      const startTime = subHours(now, 2);
+      // Last 2 minutes with 10-second intervals
+      const startTime = new Date(now.getTime() - 2 * 60 * 1000);
       const intervals = [];
       for (let i = 0; i < 12; i++) {
-        intervals.push(new Date(startTime.getTime() + i * 10 * 60 * 1000));
+        intervals.push(new Date(startTime.getTime() + i * 10 * 1000));
       }
       
       chartData = intervals.map(interval => {
-        const nextInterval = new Date(interval.getTime() + 10 * 60 * 1000);
+        const nextInterval = new Date(interval.getTime() + 10 * 1000);
         
         const intervalTransactions = transactions.filter(t => {
           const transactionTime = new Date(t.createdAt);
@@ -64,12 +64,12 @@ export default function TransactionChart({ transactions }: TransactionChartProps
         }, 0);
 
         return {
-          time: format(interval, 'HH:mm'),
+          time: format(interval, 'HH:mm:ss'),
           total,
           successful,
           failed,
           volume: Math.round(totalVolume * 100) / 100,
-          displayTime: format(interval, 'MMM d, HH:mm'),
+          displayTime: format(interval, 'HH:mm:ss'),
         };
       });
     } else if (timePeriod === '24h') {
@@ -283,7 +283,7 @@ export default function TransactionChart({ transactions }: TransactionChartProps
       const interval = setInterval(() => {
         // Trigger re-render by updating a dummy state
         setTooltip(prev => ({ ...prev }));
-      }, 30000); // Refresh every 30 seconds
+      }, 5000); // Refresh every 5 seconds
 
       return () => clearInterval(interval);
     }
@@ -310,7 +310,7 @@ export default function TransactionChart({ transactions }: TransactionChartProps
 
   const getTimePeriodLabel = () => {
     switch (timePeriod) {
-      case 'realtime': return 'Real Time (Last 2h)';
+      case 'realtime': return 'Real Time (Last 2min)';
       case '24h': return '24 Hours';
       case '1month': return '1 Month';
       default: return '24 Hours';
