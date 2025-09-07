@@ -528,14 +528,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   async function sendMetricsUpdate(client?: WebSocket) {
     try {
       const systemStats = await storage.getSystemStats();
-      const recentTransactionsResult = await storage.getTransactions(100, 0);
+      const recentTransactionsResult = await storage.getTransactions(100, 0) as any;
       const processorStatus = await paymentProcessor.getProcessorStatus();
       
       const message = {
         type: 'metrics',
         data: {
           stats: systemStats,
-          recentTransactions: recentTransactionsResult.transactions,
+          recentTransactions: recentTransactionsResult.transactions || [],
           processors: processorStatus,
           timestamp: new Date().toISOString()
         }
@@ -553,12 +553,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   async function sendTransactionsUpdate(client?: WebSocket) {
     try {
-      const result = await storage.getTransactions(10, 0);
+      const result = await storage.getTransactions(10, 0) as any;
+      logger.info(`Fetched ${result.transactions?.length || 0} transactions for WebSocket broadcast`, 'websocket', { 
+        hasTransactions: !!result.transactions, 
+        hasPagination: !!result.pagination,
+        totalInPagination: result.pagination?.total 
+      });
+      
       const message = {
         type: 'transactions',
         data: {
-          transactions: result.transactions,
-          pagination: result.pagination,
+          transactions: result.transactions || [],
+          pagination: result.pagination || { total: 0, limit: 10, offset: 0 },
           timestamp: new Date().toISOString()
         }
       };
