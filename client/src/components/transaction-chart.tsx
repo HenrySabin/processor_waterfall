@@ -142,7 +142,7 @@ export default function TransactionChart({ transactions }: TransactionChartProps
     // Clear canvas
     ctx.clearRect(0, 0, rect.width, rect.height);
 
-    const maxValue = Math.max(...chartData.map(d => d.total), 5);
+    const maxValue = Math.max(...chartData.map(d => d.total), 1);
     const stepX = chartWidth / (chartData.length - 1);
 
     // Draw background grid
@@ -158,8 +158,8 @@ export default function TransactionChart({ transactions }: TransactionChartProps
       ctx.stroke();
     }
 
-    // Vertical grid lines
-    for (let i = 0; i < chartData.length; i += 2) {
+    // Vertical grid lines (show fewer for cleaner look)
+    for (let i = 0; i < chartData.length; i += Math.max(2, Math.floor(chartData.length / 6))) {
       const x = padding.left + stepX * i;
       ctx.beginPath();
       ctx.moveTo(x, padding.top);
@@ -193,16 +193,36 @@ export default function TransactionChart({ transactions }: TransactionChartProps
       ctx.fillStyle = gradient;
       ctx.fill();
 
-      // Draw line
+      // Draw smooth line using quadratic curves
       ctx.beginPath();
       ctx.moveTo(points[0].x, points[0].y);
       
       for (let i = 1; i < points.length; i++) {
-        ctx.lineTo(points[i].x, points[i].y);
+        const prevPoint = points[i - 1];
+        const currentPoint = points[i];
+        
+        if (i === 1) {
+          // First curve point
+          const controlX = (prevPoint.x + currentPoint.x) / 2;
+          const controlY = (prevPoint.y + currentPoint.y) / 2;
+          ctx.quadraticCurveTo(prevPoint.x, prevPoint.y, controlX, controlY);
+        } else {
+          // Smooth curve using quadratic bezier
+          const controlX = (prevPoint.x + currentPoint.x) / 2;
+          const controlY = (prevPoint.y + currentPoint.y) / 2;
+          ctx.quadraticCurveTo(prevPoint.x, prevPoint.y, controlX, controlY);
+        }
+        
+        if (i === points.length - 1) {
+          // Complete the curve to the last point
+          ctx.quadraticCurveTo(currentPoint.x, currentPoint.y, currentPoint.x, currentPoint.y);
+        }
       }
       
       ctx.strokeStyle = '#3b82f6';
       ctx.lineWidth = 3;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
       ctx.stroke();
 
       // Draw data points
@@ -269,7 +289,8 @@ export default function TransactionChart({ transactions }: TransactionChartProps
     ctx.textBaseline = 'top';
 
     chartData.forEach((d, i) => {
-      if (i % 2 === 0) { // Show every other label to avoid crowding
+      const labelStep = Math.max(2, Math.floor(chartData.length / 6));
+      if (i % labelStep === 0) { // Show fewer labels to avoid crowding
         const x = padding.left + stepX * i;
         ctx.fillText(d.time, x, padding.top + chartHeight + 10);
       }
