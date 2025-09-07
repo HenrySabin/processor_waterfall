@@ -9,7 +9,7 @@ import ProcessorStatus from "@/components/processor-status";
 import RecentTransactions from "@/components/recent-transactions";
 import SystemHealth from "@/components/system-health";
 import QuickActions from "@/components/quick-actions";
-import LiveTransactionChart from "@/components/live-transaction-chart";
+import StreamingTransactionChart from "@/components/streaming-transaction-chart";
 
 export default function Dashboard() {
   const [location, setLocation] = useLocation();
@@ -272,7 +272,7 @@ export default function Dashboard() {
                 <div style={{ padding: '16px' }}>
                   <Text variant="headingMd" as="h2">Transaction Volume</Text>
                   <div style={{ marginTop: '16px', height: '200px' }}>
-                    <LiveTransactionChart transactions={metrics?.recentTransactions || []} />
+                    <StreamingTransactionChart transactions={metrics?.recentTransactions || []} />
                   </div>
                 </div>
               </Card>
