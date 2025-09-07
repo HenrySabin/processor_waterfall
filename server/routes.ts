@@ -31,11 +31,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     credentials: true,
   }));
 
-  // Apply rate limiting to all API routes
-  app.use('/api', apiRateLimiter.middleware);
+  // Apply rate limiting to all API routes (but skip for demo endpoints)
+  app.use('/api', (req, res, next) => {
+    // Skip rate limiting for demo-related endpoints during high load
+    if (req.path.includes('/demo/') || 
+        (req.method === 'GET' && (req.path === '/metrics' || req.path === '/health'))) {
+      next();
+      return;
+    }
+    apiRateLimiter.middleware(req, res, next);
+  });
 
   // Health check endpoint (no auth required)
-  app.get('/api/health', healthCheckRateLimiter.middleware, async (req, res) => {
+  app.get('/api/health', async (req, res) => {
     try {
       const systemStats = await storage.getSystemStats();
       const processorStatus = await paymentProcessor.getProcessorStatus();

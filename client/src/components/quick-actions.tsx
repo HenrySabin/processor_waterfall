@@ -8,7 +8,7 @@ export default function QuickActions() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [demoRunning, setDemoRunning] = useState(false);
-  const [demoProgress, setDemoProgress] = useState({ current: 0, total: 25 });
+  const [demoProgress, setDemoProgress] = useState({ current: 0, total: 100 });
 
   const testPaymentMutation = useMutation({
     mutationFn: () => api.processPayment({
@@ -38,42 +38,54 @@ export default function QuickActions() {
     if (demoRunning) return;
     
     setDemoRunning(true);
-    setDemoProgress({ current: 0, total: 25 });
+    setDemoProgress({ current: 0, total: 100 });
     
-    const demoPayments = [
-      // Initial slow rollout (longer delays)
-      { amount: "25.99", currency: "USD", metadata: { demo: true, customer: "Alice Johnson", product: "Premium Plan" } },
-      { amount: "149.99", currency: "USD", metadata: { demo: true, customer: "Bob Smith", product: "Enterprise License" } },
-      { amount: "89.50", currency: "USD", metadata: { demo: true, customer: "Carol Davis", product: "Monthly Subscription" } },
-      { amount: "12.00", currency: "USD", metadata: { demo: true, customer: "David Wilson", product: "Basic Plan" } },
-      { amount: "299.99", currency: "USD", metadata: { demo: true, customer: "Eva Brown", product: "Yearly Premium" } },
-      
-      // Building momentum (medium delays)
-      { amount: "67.49", currency: "USD", metadata: { demo: true, customer: "Frank Miller", product: "Pro Tools" } },
-      { amount: "34.99", currency: "USD", metadata: { demo: true, customer: "Grace Lee", product: "Monthly Pro" } },
-      { amount: "156.00", currency: "USD", metadata: { demo: true, customer: "Henry Chang", product: "Team License" } },
-      { amount: "78.25", currency: "USD", metadata: { demo: true, customer: "Ivy Martinez", product: "Standard Plan" } },
-      { amount: "199.99", currency: "USD", metadata: { demo: true, customer: "Jack Thompson", product: "Annual Pro" } },
-      
-      // High-traffic spike (short delays)
-      { amount: "499.99", currency: "USD", metadata: { demo: true, customer: "Kelly Anderson", product: "Enterprise Suite" } },
-      { amount: "999.00", currency: "USD", metadata: { demo: true, customer: "Liam Rodriguez", product: "Corporate License" } },
-      { amount: "45.99", currency: "USD", metadata: { demo: true, customer: "Maya Patel", product: "Starter Pack" } },
-      { amount: "125.50", currency: "USD", metadata: { demo: true, customer: "Nathan Kim", product: "Developer Tools" } },
-      { amount: "379.99", currency: "USD", metadata: { demo: true, customer: "Olivia Green", product: "Team Premium" } },
-      { amount: "22.49", currency: "USD", metadata: { demo: true, customer: "Paul Walker", product: "Basic Tools" } },
-      { amount: "188.75", currency: "USD", metadata: { demo: true, customer: "Quinn Taylor", product: "Pro Suite" } },
-      { amount: "56.99", currency: "USD", metadata: { demo: true, customer: "Rachel White", product: "Monthly Basic" } },
-      { amount: "245.00", currency: "USD", metadata: { demo: true, customer: "Sam Johnson", product: "Quarterly Pro" } },
-      { amount: "99.99", currency: "USD", metadata: { demo: true, customer: "Tina Liu", product: "Standard Pro" } },
-      
-      // Final burst (very short delays)
-      { amount: "167.49", currency: "USD", metadata: { demo: true, customer: "Uma Shah", product: "Team Standard" } },
-      { amount: "89.99", currency: "USD", metadata: { demo: true, customer: "Victor Chen", product: "Monthly Plus" } },
-      { amount: "299.49", currency: "USD", metadata: { demo: true, customer: "Wendy Brooks", product: "Annual Team" } },
-      { amount: "139.99", currency: "USD", metadata: { demo: true, customer: "Xavier Jones", product: "Pro Monthly" } },
-      { amount: "459.99", currency: "USD", metadata: { demo: true, customer: "Yuki Tanaka", product: "Enterprise Pro" } }
+    // Generate 100 realistic demo payments
+    const customers = [
+      "Alice Johnson", "Bob Smith", "Carol Davis", "David Wilson", "Eva Brown",
+      "Frank Miller", "Grace Lee", "Henry Chang", "Ivy Martinez", "Jack Thompson",
+      "Kelly Anderson", "Liam Rodriguez", "Maya Patel", "Nathan Kim", "Olivia Green",
+      "Paul Walker", "Quinn Taylor", "Rachel White", "Sam Johnson", "Tina Liu",
+      "Uma Shah", "Victor Chen", "Wendy Brooks", "Xavier Jones", "Yuki Tanaka",
+      "Alex Turner", "Beth Cooper", "Chris Evans", "Diana Prince", "Eric Stone",
+      "Fiona Clark", "Gary Adams", "Hannah Lee", "Ian Foster", "Julia Martinez",
+      "Kevin Brown", "Laura Wilson", "Mike Davis", "Nina Garcia", "Oscar Kim",
+      "Penny Wright", "Quinn Miller", "Ryan Jones", "Sarah Chen", "Tony Park",
+      "Uma Patel", "Vince Taylor", "Wendy Adams", "Xander Liu", "Yvonne King",
+      "Zoe Thompson", "Aaron White", "Bella Rodriguez", "Carlos Martinez", "Delilah Johnson",
+      "Ethan Cooper", "Felicia Brown", "Gabriel Kim", "Holly Davis", "Ivan Garcia",
+      "Jasmine Lee", "Kyle Wilson", "Lucy Chen", "Marcus Jones", "Nora Smith",
+      "Oliver Park", "Priya Patel", "Quincy Adams", "Ruby Martinez", "Sean Taylor",
+      "Tara Johnson", "Ulysses Brown", "Violet Kim", "Wade Davis", "Xara Garcia",
+      "Yale Lee", "Zara Wilson", "Adam Chen", "Bryce Jones", "Chloe Smith",
+      "Drake Park", "Elena Patel", "Felix Adams", "Gina Martinez", "Hugo Taylor",
+      "Iris Johnson", "Jake Brown", "Kara Kim", "Luke Davis", "Maya Garcia",
+      "Noah Lee", "Olive Wilson", "Pete Chen", "Quinn Jones", "Rita Smith",
+      "Shane Park", "Tess Patel", "Uri Adams", "Vera Martinez", "Will Taylor",
+      "Xia Johnson", "Yale Brown", "Zoe Kim", "Amy Davis", "Ben Garcia"
     ];
+    
+    const products = [
+      "Premium Plan", "Enterprise License", "Monthly Subscription", "Basic Plan", "Yearly Premium",
+      "Pro Tools", "Monthly Pro", "Team License", "Standard Plan", "Annual Pro",
+      "Enterprise Suite", "Corporate License", "Starter Pack", "Developer Tools", "Team Premium",
+      "Basic Tools", "Pro Suite", "Monthly Basic", "Quarterly Pro", "Standard Pro",
+      "Team Standard", "Monthly Plus", "Annual Team", "Pro Monthly", "Enterprise Pro",
+      "Starter Tools", "Premium Suite", "Team Basic", "Corporate Pro", "Monthly Standard"
+    ];
+    
+    const demoPayments = [];
+    for (let i = 0; i < 100; i++) {
+      const amount = (Math.random() * 800 + 15).toFixed(2); // Random amounts $15-$815
+      const customer = customers[i % customers.length];
+      const product = products[i % products.length];
+      
+      demoPayments.push({
+        amount,
+        currency: "USD",
+        metadata: { demo: true, customer, product }
+      });
+    }
 
     let successCount = 0;
     let failCount = 0;
@@ -104,23 +116,10 @@ export default function QuickActions() {
         queryClient.invalidateQueries({ queryKey: ['/api/metrics'] });
         queryClient.invalidateQueries({ queryKey: ['/api/health'] });
         
-        // Dynamic delays - creating realistic traffic patterns
+        // High-speed processing: 100 payments over 10 seconds (average 100ms delays)
         if (i < demoPayments.length - 1) {
-          let delay;
-          if (i < 5) {
-            // Slow start: 800-1200ms delays (1-2 per second)
-            delay = Math.random() * 400 + 800;
-          } else if (i < 10) {
-            // Building up: 400-600ms delays (2-3 per second)
-            delay = Math.random() * 200 + 400;
-          } else if (i < 20) {
-            // High traffic spike: 100-250ms delays (4-8 per second)
-            delay = Math.random() * 150 + 100;
-          } else {
-            // Final burst: 50-150ms delays (8-15 per second)
-            delay = Math.random() * 100 + 50;
-          }
-          
+          // Random delay between 50-150ms to create realistic variation while maintaining ~10/second
+          const delay = Math.random() * 100 + 50;
           await new Promise(resolve => setTimeout(resolve, delay));
         }
       }
@@ -141,7 +140,7 @@ export default function QuickActions() {
       });
     } finally {
       setDemoRunning(false);
-      setDemoProgress({ current: 0, total: 25 });
+      setDemoProgress({ current: 0, total: 100 });
     }
   };
 
@@ -188,7 +187,7 @@ export default function QuickActions() {
   const actions = [
     {
       title: demoRunning ? `🚀 Demo Running (${demoProgress.current}/${demoProgress.total})` : "🚀 Demo Mode",
-      description: demoRunning ? "Transactions streaming in real-time..." : "Simulate 25 staggered payments",
+      description: demoRunning ? "High-volume transactions streaming..." : "Simulate 100 payments in 10 seconds",
       icon: "fas fa-rocket",
       action: () => runStaggeredDemo(),
       loading: demoRunning,
