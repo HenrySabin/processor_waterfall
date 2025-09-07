@@ -44,7 +44,7 @@ export default function RecentTransactions({}: RecentTransactionsProps) {
 
   if (isLoading && transactions.length === 0) {
     return (
-      <div className="lg:col-span-2 bg-card p-6 rounded-lg shadow-sm border border-border">
+      <div className="bg-card p-6 rounded-lg shadow-sm border border-border">
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-lg font-semibold text-foreground">Recent Transactions</h3>
         </div>
@@ -67,7 +67,7 @@ export default function RecentTransactions({}: RecentTransactionsProps) {
   }
 
   return (
-    <div className="lg:col-span-2 bg-card p-6 rounded-lg shadow-sm border border-border" data-testid="recent-transactions">
+    <div className="bg-card p-6 rounded-lg shadow-sm border border-border" data-testid="recent-transactions">
       <div className="flex justify-between items-center mb-4">
         <h3 className="text-lg font-semibold text-foreground" data-testid="transactions-title">Recent Transactions</h3>
         <Button variant="ghost" size="sm" className="text-primary hover:text-primary/80" data-testid="link-view-all-transactions">
