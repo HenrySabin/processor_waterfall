@@ -27,6 +27,11 @@ export default function Dashboard() {
   // Replace HTTP polling with WebSocket
   const { data: wsData, isConnected, error: wsError } = useWebSocket();
   
+  // 🔍 DEBUG: Log WebSocket data state
+  console.log('🚀 Dashboard render - wsData keys:', Object.keys(wsData || {}));
+  console.log('🚀 wsData.transactions exists:', !!wsData.transactions);
+  console.log('🚀 wsData.transactions count:', wsData.transactions?.transactions?.length || 0);
+  
   // Use WebSocket data instead of HTTP requests
   const metrics = wsData.metrics;
   const health = wsData.health;
@@ -372,7 +377,13 @@ export default function Dashboard() {
                   </div>
                 </div>
                 <div style={{ marginTop: '16px', height: '200px' }}>
-                  <RechartsTransactionChart transactions={wsData.transactions?.transactions || wsData.metrics?.recentTransactions || []} />
+                  {(() => {
+                    const chartTransactions = wsData.transactions?.transactions || wsData.metrics?.recentTransactions || [];
+                    console.log('🎯 Dashboard passing to chart:', chartTransactions?.length || 0, 'transactions');
+                    console.log('🔍 wsData.transactions:', wsData.transactions ? 'exists' : 'null');
+                    console.log('🔍 wsData.metrics?.recentTransactions:', wsData.metrics?.recentTransactions?.length || 0);
+                    return <RechartsTransactionChart transactions={chartTransactions} />;
+                  })()}
                 </div>
               </div>
             </Card>
