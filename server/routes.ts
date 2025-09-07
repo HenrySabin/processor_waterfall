@@ -82,8 +82,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Payment processing endpoint
-  app.post('/api/payments', paymentRateLimiter.middleware, async (req, res) => {
+  // Payment processing endpoint (rate limiter removed for unlimited transactions)
+  app.post('/api/payments', async (req, res) => {
     try {
       // Validate request body
       const validatedData = paymentRequestSchema.parse(req.body);
