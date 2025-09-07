@@ -13,11 +13,11 @@ export default function RechartsTransactionChart({ transactions = [] }: Recharts
   useEffect(() => {
     const now = Date.now();
     const timeLabels = [
-      { label: "5s ago", rangeStart: 4, rangeEnd: 5 },
-      { label: "4s ago", rangeStart: 3, rangeEnd: 4 },
-      { label: "3s ago", rangeStart: 2, rangeEnd: 3 },
-      { label: "2s ago", rangeStart: 1, rangeEnd: 2 },
-      { label: "1s ago", rangeStart: 0, rangeEnd: 1 }
+      { label: "2s ago", rangeStart: 1.5, rangeEnd: 2.5 },
+      { label: "1.5s ago", rangeStart: 1, rangeEnd: 1.5 },
+      { label: "1s ago", rangeStart: 0.5, rangeEnd: 1 },
+      { label: "0.5s ago", rangeStart: 0.2, rangeEnd: 0.5 },
+      { label: "Now", rangeStart: 0, rangeEnd: 0.2 }
     ];
     
     // Count transactions in each time bucket
