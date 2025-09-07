@@ -1,4 +1,4 @@
-import { Card, Text, Badge, Button, DataTable, ButtonGroup, Toast } from "@shopify/polaris";
+import { Card, Text, Badge, Button, DataTable, ButtonGroup, Toast, Switch } from "@shopify/polaris";
 import { useState, useCallback } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
@@ -80,15 +80,12 @@ export default function ProcessorStatus({ processors }: ProcessorStatusProps) {
     <Text variant="bodyMd" as="span" key={`success-${processor.id}`}>
       {processor.successRate}%
     </Text>,
-    <Button
+    <Switch
       key={`toggle-${processor.id}`}
-      size="slim"
-      onClick={() => toggleMutation.mutate(processor.id)}
-      loading={toggleMutation.isPending}
-      tone="critical"
-    >
-      Toggle
-    </Button>,
+      checked={processor.enabled}
+      onChange={() => toggleMutation.mutate(processor.id)}
+      disabled={toggleMutation.isPending}
+    />,
   ]);
 
   const headings = [
