@@ -20,21 +20,7 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AppProvider 
-        i18n={{
-          Polaris: {
-            Common: {
-              checkbox: 'checkbox',
-            },
-            ResourceList: {
-              sortingLabel: 'Sort by',
-              defaultItemSingular: 'item',
-              defaultItemPlural: 'items',
-            },
-          },
-        }}
-        theme={{
-          colorScheme: 'light',
-        }}
+        i18n={{}}
       >
         <Router />
       </AppProvider>
