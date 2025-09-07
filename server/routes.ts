@@ -553,18 +553,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   async function sendTransactionsUpdate(client?: WebSocket) {
     try {
-      const result = await storage.getTransactions(10, 0) as any;
-      logger.info(`Fetched ${result.transactions?.length || 0} transactions for WebSocket broadcast`, 'websocket', { 
-        hasTransactions: !!result.transactions, 
-        hasPagination: !!result.pagination,
-        totalInPagination: result.pagination?.total 
+      // Force fetch fresh transactions directly
+      console.log('[DEBUG] Fetching transactions for WebSocket...');
+      const result = await storage.getTransactions(10, 0);
+      console.log('[DEBUG] Storage returned:', { 
+        isArray: Array.isArray(result),
+        hasTransactionsProperty: 'transactions' in result,
+        resultKeys: Object.keys(result),
+        transactionCount: result.transactions?.length || (Array.isArray(result) ? result.length : 0),
+        firstTransaction: Array.isArray(result) ? result[0]?.id : result.transactions?.[0]?.id
       });
+      
+      // Handle both possible return formats
+      const transactions = Array.isArray(result) ? result : result.transactions || [];
+      const pagination = Array.isArray(result) ? { total: result.length, limit: 10, offset: 0 } : result.pagination;
+      
+      console.log('[DEBUG] Final transactions to send:', transactions.length, 'first:', transactions[0]?.id);
       
       const message = {
         type: 'transactions',
         data: {
-          transactions: result.transactions || [],
-          pagination: result.pagination || { total: 0, limit: 10, offset: 0 },
+          transactions: transactions.slice(0, 10), // Ensure only 10 transactions
+          pagination: pagination || { total: 0, limit: 10, offset: 0 },
           timestamp: new Date().toISOString()
         }
       };
