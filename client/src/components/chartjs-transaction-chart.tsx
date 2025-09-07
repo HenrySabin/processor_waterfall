@@ -41,12 +41,11 @@ export default function ChartJSTransactionChart({ transactions = [] }: ChartJSTr
   useEffect(() => {
     const now = Date.now();
     const timeLabels = [
-      { label: "50s ago", seconds: 50 },
-      { label: "40s ago", seconds: 40 },
-      { label: "30s ago", seconds: 30 },
-      { label: "20s ago", seconds: 20 },
-      { label: "10s ago", seconds: 10 },
-      { label: "Now", seconds: 0 }
+      { label: "1 second", seconds: 0 },
+      { label: "2 seconds", seconds: 1 },
+      { label: "3 seconds", seconds: 2 },
+      { label: "4 seconds", seconds: 3 },
+      { label: "5 seconds", seconds: 4 }
     ];
     
     // Count transactions in each time bucket
@@ -54,7 +53,7 @@ export default function ChartJSTransactionChart({ transactions = [] }: ChartJSTr
       const count = transactions.filter(tx => {
         const ageInSeconds = (now - new Date(tx.createdAt).getTime()) / 1000;
         const rangeStart = timeSlot.seconds;
-        const rangeEnd = timeSlot.seconds + 10;
+        const rangeEnd = timeSlot.seconds + 1;
         return ageInSeconds >= rangeStart && ageInSeconds < rangeEnd;
       }).length;
       
