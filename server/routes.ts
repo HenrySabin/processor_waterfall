@@ -287,7 +287,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/metrics', async (req, res) => {
     try {
       const stats = await storage.getSystemStats();
-      const recentTransactions = await storage.getRecentTransactions(5);
+      const recentTransactions = await storage.getRecentTransactions(100);
       const processorStatus = await paymentProcessor.getProcessorStatus();
       
       res.json({
