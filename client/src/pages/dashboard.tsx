@@ -60,7 +60,7 @@ export default function Dashboard() {
     setDemoRunning(true);
     setDemoProgress({ current: 0, total: 100 });
     
-    // Generate 100 realistic demo payments
+    // Generate 100 exponentially accelerating demo payments
     const customers = [
       "Alice Johnson", "Bob Smith", "Carol Davis", "David Wilson", "Eva Brown",
       "Frank Miller", "Grace Lee", "Henry Chang", "Ivy Martinez", "Jack Thompson",
@@ -136,20 +136,21 @@ export default function Dashboard() {
         queryClient.invalidateQueries({ queryKey: ['/api/health'] });
         
         if (i < demoPayments.length - 1) {
-          // Create acceleration/deceleration curve
+          // Create exponential acceleration surge: start aggressive, get exponentially faster
           const progress = i / (demoPayments.length - 1); // 0 to 1
           
-          // Ease-in-out cubic function: rapid acceleration at start, rapid deceleration at end
-          const easeInOutCubic = (t: number) => {
-            return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+          // Exponential acceleration function: starts fast, gets exponentially faster
+          const exponentialAcceleration = (t: number) => {
+            // Exponential curve that starts at 1 and approaches 0 exponentially
+            return Math.pow(0.05, t); // Very aggressive exponential decay
           };
           
-          const easedProgress = easeInOutCubic(progress);
+          const exponentialProgress = exponentialAcceleration(progress);
           
-          // Map eased progress to delay: start fast (10ms), end slow (300ms)
-          const minDelay = 10;
-          const maxDelay = 300;
-          const delay = minDelay + (maxDelay - minDelay) * easedProgress;
+          // Map to delay: start moderate (100ms), end extremely fast (1ms)
+          const startDelay = 100;
+          const endDelay = 1;
+          const delay = endDelay + (startDelay - endDelay) * exponentialProgress;
           
           await new Promise(resolve => setTimeout(resolve, delay));
         }
