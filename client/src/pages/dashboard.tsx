@@ -242,7 +242,7 @@ export default function Dashboard() {
             size="slim"
             primary
           >
-            {demoRunning ? `Demo (${demoProgress.current}/${demoProgress.total})` : '🚀 Demo Mode'}
+            {demoRunning ? `Demo (${demoProgress.current}/${demoProgress.total})` : '🚀 Simulate Surge'}
           </Button>
         </div>
       }
