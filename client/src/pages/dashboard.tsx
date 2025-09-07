@@ -136,7 +136,21 @@ export default function Dashboard() {
         queryClient.invalidateQueries({ queryKey: ['/api/health'] });
         
         if (i < demoPayments.length - 1) {
-          const delay = Math.random() * 100 + 50;
+          // Create acceleration/deceleration curve
+          const progress = i / (demoPayments.length - 1); // 0 to 1
+          
+          // Ease-in-out cubic function: rapid acceleration at start, rapid deceleration at end
+          const easeInOutCubic = (t: number) => {
+            return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+          };
+          
+          const easedProgress = easeInOutCubic(progress);
+          
+          // Map eased progress to delay: start fast (10ms), end slow (300ms)
+          const minDelay = 10;
+          const maxDelay = 300;
+          const delay = minDelay + (maxDelay - minDelay) * easedProgress;
+          
           await new Promise(resolve => setTimeout(resolve, delay));
         }
       }
