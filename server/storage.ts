@@ -95,7 +95,7 @@ export class MemStorage implements IStorage {
         responseTime: 180,
         config: { appId: "mock_square_app" },
         circuitBreakerOpen: false,
-        consecutiveFailures: 2,
+        consecutiveFailures: 0,
       },
       {
         name: "Adyen",
@@ -117,7 +117,7 @@ export class MemStorage implements IStorage {
         responseTime: 240,
         config: { apiLoginId: "mock_auth_login", transactionKey: "mock_auth_key" },
         circuitBreakerOpen: false,
-        consecutiveFailures: 1,
+        consecutiveFailures: 0,
       },
       {
         name: "Braintree",
@@ -150,7 +150,7 @@ export class MemStorage implements IStorage {
         responseTime: 280,
         config: { serviceKey: "mock_worldpay_service", clientKey: "mock_worldpay_client" },
         circuitBreakerOpen: false,
-        consecutiveFailures: 3,
+        consecutiveFailures: 1,
       },
       {
         name: "First Data",
@@ -161,7 +161,7 @@ export class MemStorage implements IStorage {
         responseTime: 320,
         config: { storeId: "mock_fd_store", sharedSecret: "mock_fd_secret" },
         circuitBreakerOpen: false,
-        consecutiveFailures: 1,
+        consecutiveFailures: 0,
       },
       {
         name: "Klarna",
@@ -183,7 +183,7 @@ export class MemStorage implements IStorage {
         responseTime: 250,
         config: { merchantId: "mock_afterpay_merchant", secretKey: "mock_afterpay_secret" },
         circuitBreakerOpen: false,
-        consecutiveFailures: 2,
+        consecutiveFailures: 0,
       },
       {
         name: "Apple Pay",
@@ -216,7 +216,7 @@ export class MemStorage implements IStorage {
         responseTime: 200,
         config: { sellerId: "mock_amazon_seller", clientId: "mock_amazon_client" },
         circuitBreakerOpen: false,
-        consecutiveFailures: 1,
+        consecutiveFailures: 0,
       },
       {
         name: "Dwolla",
@@ -227,7 +227,7 @@ export class MemStorage implements IStorage {
         responseTime: 290,
         config: { key: "mock_dwolla_key", secret: "mock_dwolla_secret" },
         circuitBreakerOpen: false,
-        consecutiveFailures: 2,
+        consecutiveFailures: 0,
       },
       {
         name: "Flutterwave",
@@ -238,7 +238,7 @@ export class MemStorage implements IStorage {
         responseTime: 340,
         config: { publicKey: "mock_flutter_pub", secretKey: "mock_flutter_secret" },
         circuitBreakerOpen: false,
-        consecutiveFailures: 4,
+        consecutiveFailures: 2,
       },
       {
         name: "Razorpay",
@@ -249,7 +249,7 @@ export class MemStorage implements IStorage {
         responseTime: 230,
         config: { keyId: "mock_razor_key", keySecret: "mock_razor_secret" },
         circuitBreakerOpen: false,
-        consecutiveFailures: 1,
+        consecutiveFailures: 0,
       },
       {
         name: "Mollie",
@@ -282,7 +282,7 @@ export class MemStorage implements IStorage {
         responseTime: 275,
         config: { secretKey: "mock_paystack_secret", publicKey: "mock_paystack_pub" },
         circuitBreakerOpen: false,
-        consecutiveFailures: 1,
+        consecutiveFailures: 0,
       },
       {
         name: "Coinbase Commerce",
@@ -293,7 +293,7 @@ export class MemStorage implements IStorage {
         responseTime: 380,
         config: { apiKey: "mock_coinbase_key", webhookSecret: "mock_coinbase_webhook" },
         circuitBreakerOpen: false,
-        consecutiveFailures: 3,
+        consecutiveFailures: 1,
       },
       {
         name: "2Checkout",
@@ -304,7 +304,7 @@ export class MemStorage implements IStorage {
         responseTime: 310,
         config: { merchantCode: "mock_2co_merchant", secretKey: "mock_2co_secret" },
         circuitBreakerOpen: false,
-        consecutiveFailures: 2,
+        consecutiveFailures: 0,
       },
       {
         name: "BlueSnap",
@@ -315,7 +315,7 @@ export class MemStorage implements IStorage {
         responseTime: 210,
         config: { username: "mock_blue_user", password: "mock_blue_pass" },
         circuitBreakerOpen: false,
-        consecutiveFailures: 1,
+        consecutiveFailures: 0,
       },
       {
         name: "Paymi",
@@ -326,7 +326,7 @@ export class MemStorage implements IStorage {
         responseTime: 290,
         config: { merchantId: "mock_paymi_merchant", apiKey: "mock_paymi_key" },
         circuitBreakerOpen: false,
-        consecutiveFailures: 2,
+        consecutiveFailures: 0,
       },
       {
         name: "Skrill",
@@ -337,7 +337,7 @@ export class MemStorage implements IStorage {
         responseTime: 245,
         config: { email: "mock_skrill_email", secretWord: "mock_skrill_secret" },
         circuitBreakerOpen: false,
-        consecutiveFailures: 1,
+        consecutiveFailures: 0,
       },
       {
         name: "Neteller",
@@ -359,7 +359,7 @@ export class MemStorage implements IStorage {
         responseTime: 325,
         config: { posId: "mock_payu_pos", secondKey: "mock_payu_key" },
         circuitBreakerOpen: false,
-        consecutiveFailures: 3,
+        consecutiveFailures: 1,
       },
       {
         name: "Payme",
@@ -381,7 +381,7 @@ export class MemStorage implements IStorage {
         responseTime: 355,
         config: { clientId: "mock_epay_client", clientSecret: "mock_epay_secret" },
         circuitBreakerOpen: false,
-        consecutiveFailures: 4,
+        consecutiveFailures: 2,
       },
       {
         name: "Payoneer",
@@ -392,7 +392,7 @@ export class MemStorage implements IStorage {
         responseTime: 235,
         config: { programId: "mock_payoneer_program", username: "mock_payoneer_user" },
         circuitBreakerOpen: false,
-        consecutiveFailures: 1,
+        consecutiveFailures: 0,
       },
       {
         name: "Alipay",
@@ -436,7 +436,7 @@ export class MemStorage implements IStorage {
         responseTime: 205,
         config: { merchantId: "mock_jcb_merchant", terminalId: "mock_jcb_terminal" },
         circuitBreakerOpen: false,
-        consecutiveFailures: 1,
+        consecutiveFailures: 0,
       },
       {
         name: "Diners Club",
@@ -447,7 +447,7 @@ export class MemStorage implements IStorage {
         responseTime: 225,
         config: { merchantId: "mock_diners_merchant", secretKey: "mock_diners_secret" },
         circuitBreakerOpen: false,
-        consecutiveFailures: 1,
+        consecutiveFailures: 0,
       },
       {
         name: "Discover",
@@ -502,7 +502,7 @@ export class MemStorage implements IStorage {
         responseTime: 285,
         config: { apiKey: "mock_eway_key", password: "mock_eway_pass" },
         circuitBreakerOpen: false,
-        consecutiveFailures: 2,
+        consecutiveFailures: 0,
       },
       {
         name: "SecurePay",
@@ -513,7 +513,7 @@ export class MemStorage implements IStorage {
         responseTime: 295,
         config: { merchantId: "mock_secure_merchant", password: "mock_secure_pass" },
         circuitBreakerOpen: false,
-        consecutiveFailures: 3,
+        consecutiveFailures: 1,
       },
       {
         name: "Pin Payments",
@@ -524,7 +524,7 @@ export class MemStorage implements IStorage {
         responseTime: 215,
         config: { secretKey: "mock_pin_secret", publishableKey: "mock_pin_pub" },
         circuitBreakerOpen: false,
-        consecutiveFailures: 1,
+        consecutiveFailures: 0,
       },
       {
         name: "Bambora",
@@ -546,7 +546,7 @@ export class MemStorage implements IStorage {
         responseTime: 275,
         config: { storeId: "mock_moneris_store", apiToken: "mock_moneris_token" },
         circuitBreakerOpen: false,
-        consecutiveFailures: 2,
+        consecutiveFailures: 0,
       },
       {
         name: "Global Payments",
@@ -557,7 +557,7 @@ export class MemStorage implements IStorage {
         responseTime: 225,
         config: { appId: "mock_global_app", appKey: "mock_global_key" },
         circuitBreakerOpen: false,
-        consecutiveFailures: 1,
+        consecutiveFailures: 0,
       },
       {
         name: "CyberSource",
@@ -579,7 +579,7 @@ export class MemStorage implements IStorage {
         responseTime: 305,
         config: { storeId: "mock_elavon_store", userId: "mock_elavon_user" },
         circuitBreakerOpen: false,
-        consecutiveFailures: 3,
+        consecutiveFailures: 1,
       },
       {
         name: "TSYS",
@@ -590,7 +590,7 @@ export class MemStorage implements IStorage {
         responseTime: 325,
         config: { deviceId: "mock_tsys_device", transactionKey: "mock_tsys_key" },
         circuitBreakerOpen: false,
-        consecutiveFailures: 4,
+        consecutiveFailures: 2,
       },
       {
         name: "PayPal Credit",
@@ -601,7 +601,7 @@ export class MemStorage implements IStorage {
         responseTime: 255,
         config: { clientId: "mock_pp_credit_client", clientSecret: "mock_pp_credit_secret" },
         circuitBreakerOpen: false,
-        consecutiveFailures: 1,
+        consecutiveFailures: 0,
       },
       {
         name: "Affirm",
@@ -612,7 +612,7 @@ export class MemStorage implements IStorage {
         responseTime: 285,
         config: { publicApiKey: "mock_affirm_pub", privateApiKey: "mock_affirm_private" },
         circuitBreakerOpen: false,
-        consecutiveFailures: 2,
+        consecutiveFailures: 0,
       },
       {
         name: "Sezzle",
@@ -623,7 +623,7 @@ export class MemStorage implements IStorage {
         responseTime: 295,
         config: { merchantId: "mock_sezzle_merchant", privateKey: "mock_sezzle_private" },
         circuitBreakerOpen: false,
-        consecutiveFailures: 3,
+        consecutiveFailures: 0,
       },
       {
         name: "Zip (Quadpay)",
@@ -634,7 +634,7 @@ export class MemStorage implements IStorage {
         responseTime: 275,
         config: { merchantKey: "mock_zip_merchant", apiKey: "mock_zip_api" },
         circuitBreakerOpen: false,
-        consecutiveFailures: 2,
+        consecutiveFailures: 0,
       },
       {
         name: "PayBright",
@@ -645,7 +645,7 @@ export class MemStorage implements IStorage {
         responseTime: 245,
         config: { apiToken: "mock_paybright_token", webhookToken: "mock_paybright_webhook" },
         circuitBreakerOpen: false,
-        consecutiveFailures: 1,
+        consecutiveFailures: 0,
       },
       {
         name: "Splitit",
@@ -656,7 +656,7 @@ export class MemStorage implements IStorage {
         responseTime: 335,
         config: { apiKey: "mock_splitit_key", userName: "mock_splitit_user" },
         circuitBreakerOpen: false,
-        consecutiveFailures: 4,
+        consecutiveFailures: 1,
       },
       {
         name: "Paidy",
@@ -678,7 +678,7 @@ export class MemStorage implements IStorage {
         responseTime: 235,
         config: { accessToken: "mock_mercado_token", clientId: "mock_mercado_client" },
         circuitBreakerOpen: false,
-        consecutiveFailures: 1,
+        consecutiveFailures: 0,
       },
       {
         name: "PicPay",
@@ -689,7 +689,7 @@ export class MemStorage implements IStorage {
         responseTime: 295,
         config: { picpayToken: "mock_picpay_token", sellerToken: "mock_picpay_seller" },
         circuitBreakerOpen: false,
-        consecutiveFailures: 2,
+        consecutiveFailures: 0,
       },
     ];
 
