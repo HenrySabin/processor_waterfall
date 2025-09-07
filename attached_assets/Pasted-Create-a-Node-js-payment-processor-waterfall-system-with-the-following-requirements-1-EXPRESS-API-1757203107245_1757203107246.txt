@@ -1,0 +1,66 @@
+Create a Node.js payment processor waterfall system with the following requirements:
+
+1. EXPRESS API SERVER:
+   - RESTful API with endpoints for processing payments
+   - CORS enabled, helmet for security, morgan for logging
+   - Environment variable support with dotenv
+   - Health check endpoint at /health
+
+2. PAYMENT PROCESSOR WATERFALL LOGIC:
+   - Create a routing system that tries multiple payment processors in order
+   - If first processor fails, automatically try the next one
+   - Support for at least 3 mock processors initially (Stripe, PayPal, Square simulators)
+   - Each processor should have configurable success rates and response times
+   - Implement circuit breaker pattern to skip failing processors
+
+3. CORE API ENDPOINTS:
+   - POST /api/payments - Process a payment through the waterfall
+   - GET /api/payments/:id - Get payment status
+   - GET /api/processors - List all processors and their health status
+   - POST /api/processors/:id/toggle - Enable/disable a processor
+   - GET /api/health - System health check
+
+4. MOCK PAYMENT PROCESSORS:
+   - Create processor adapters that simulate real payment APIs
+   - Each processor should randomly succeed/fail based on configured rates
+   - Add realistic processing delays (100-500ms)
+   - Return standardized response format with transaction IDs
+
+5. HEALTH MONITORING:
+   - Track success/failure rates for each processor
+   - Monitor response times
+   - Implement automatic processor disabling after consecutive failures
+   - Store health metrics in Replit Database
+
+6. BASIC SMART CONTRACT INTEGRATION:
+   - Install algosdk for Algorand integration
+   - Create a simple contract client that can query processor priorities
+   - For now, use mock contract responses until we deploy real contracts
+   - Include methods to update processor rates and priorities
+
+7. DATA STORAGE:
+   - Use Replit Database to store transaction logs
+   - Store processor health metrics and status
+   - Cache processor configurations and rates
+
+8. ERROR HANDLING & LOGGING:
+   - Comprehensive error handling with proper HTTP status codes
+   - Detailed logging for all payment attempts and routing decisions
+   - Structured JSON logging format
+   - Never log sensitive payment data
+
+9. PROJECT STRUCTURE:
+   - Organize code into logical modules (adapters, routing, api, utils)
+   - Include a comprehensive README with API documentation
+   - Add basic unit tests for core routing logic
+   - Include example environment variables file
+
+10. CONFIGURATION:
+    - Support for different processor priorities and weights
+    - Configurable retry limits and timeout values
+    - Environment-based configuration (dev/prod settings)
+    - Rate limiting for API endpoints
+
+The system should be production-ready with proper error handling, logging, and the ability to easily add real payment processor integrations later. Make it modular and well-documented.
+
+Set up the complete project structure with all files, install all necessary dependencies, and create a working payment waterfall API that I can test immediately.
