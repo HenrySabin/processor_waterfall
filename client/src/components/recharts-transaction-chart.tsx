@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState } from "react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import type { Transaction } from "@/lib/api";
 
@@ -8,7 +8,6 @@ interface RechartsTransactionChartProps {
 
 export default function RechartsTransactionChart({ transactions = [] }: RechartsTransactionChartProps) {
   const [chartData, setChartData] = useState<Array<{name: string, count: number}>>([]);
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Initialize chart with reversed time labels (newest on right, oldest on left)
   const timeLabels = [
@@ -63,54 +62,8 @@ export default function RechartsTransactionChart({ transactions = [] }: Recharts
     setChartData(initialData);
   }, [transactions]); // ← Re-run when transactions change
 
-  // ✅ FLOWING ANIMATION: Set up right-to-left shifting every 500ms
-  useEffect(() => {
-    // Clean up any existing intervals
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-    }
-
-    intervalRef.current = setInterval(() => {
-      console.log('⚡ Shifting chart data right → left');
-      setChartData(prevData => {
-        if (prevData.length === 0) return prevData;
-        
-        // STEP 1: Shift all data one position left (older)
-        const shiftedData = prevData.map((item, index) => {
-          if (index === 0) {
-            // Leftmost bucket gets cleared (oldest data ages out)
-            return { ...item, count: 0 };
-          } else {
-            // Each bucket takes the value from the bucket to its right
-            return { ...item, count: prevData[index - 1].count };
-          }
-        });
-        
-        // STEP 2: Add NEW real-time data to rightmost bucket (newest)
-        // Calculate fresh count directly to avoid stale closure issues
-        const now = Date.now();
-        const newestCount = transactions.filter(tx => {
-          const ageInSeconds = (now - new Date(tx.createdAt).getTime()) / 1000;
-          return ageInSeconds >= 0 && ageInSeconds < 0.5;
-        }).length;
-        
-        console.log('🆕 Adding to rightmost bucket:', newestCount);
-        console.log('🔍 Live calc - transactions available:', transactions.length);
-        console.log('🔍 Live calc - newest transaction age:', transactions.length > 0 ? 
-          ((now - new Date(transactions[0].createdAt).getTime()) / 1000).toFixed(2) + 's' : 'none');
-        
-        shiftedData[shiftedData.length - 1].count = newestCount;
-        
-        return shiftedData;
-      });
-    }, 500); // Shift every 0.5 seconds to create flowing effect
-    
-    return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-      }
-    };
-  }, [transactions]); // Re-run when transactions change to get fresh data
+  // Removed shifting animation - caused jarring jumps
+  // Now relying entirely on real-time data calculation which works correctly
 
   return (
     <div style={{ position: 'relative', height: '200px' }} data-testid="recharts-transaction-chart">
