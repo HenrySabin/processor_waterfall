@@ -1,102 +1,33 @@
-import { useEffect, useState, useRef } from "react";
-import { ResponsiveStream } from "@nivo/stream";
+import { useEffect, useState } from "react";
+import { ResponsiveLine } from "@nivo/line";
 import type { Transaction } from "@/lib/api";
 
-interface NivoStreamingChartProps {
+interface SimpleChartProps {
   transactions?: Transaction[];
 }
 
-interface StackedDataPoint {
-  time: string;
-  Stripe: number;
-  PayPal: number;
-  Square: number;
-}
+export default function NivoStreamingChart({ transactions = [] }: SimpleChartProps) {
+  const [chartData, setChartData] = useState<any[]>([]);
 
-export default function NivoStreamingChart({ transactions = [] }: NivoStreamingChartProps) {
-  const [chartData, setChartData] = useState<StackedDataPoint[]>([]);
-  const animationRef = useRef<number>();
-  const lastUpdateRef = useRef<number>(Date.now());
-
-  // Fixed time labels that never change
-  const TIME_LABELS = ["Now", "10s", "20s", "30s", "40s", "50s", "60s"];
-
-  // Animation loop for real-time updates
-  const animate = () => {
-    const now = Date.now();
-    const deltaTime = now - lastUpdateRef.current;
-    
-    // Update every second
-    if (deltaTime >= 1000) {
-      // Create buckets for each time period and processor
-      const buckets = new Map<string, { Stripe: number; PayPal: number; Square: number }>();
-      
-      // Initialize all buckets to 0
-      TIME_LABELS.forEach(label => {
-        buckets.set(label, { Stripe: 0, PayPal: 0, Square: 0 });
-      });
-      
-      // Count recent transactions by processor and time bucket
-      transactions.forEach(transaction => {
-        const txTime = new Date(transaction.createdAt).getTime();
-        const ageInSeconds = (now - txTime) / 1000;
-        const processorName = transaction.processor || 'Stripe';
-        
-        let timeBucket = "60s";
-        if (ageInSeconds <= 5) {
-          timeBucket = "Now";
-        } else if (ageInSeconds <= 15) {
-          timeBucket = "10s";
-        } else if (ageInSeconds <= 25) {
-          timeBucket = "20s";
-        } else if (ageInSeconds <= 35) {
-          timeBucket = "30s";
-        } else if (ageInSeconds <= 45) {
-          timeBucket = "40s";
-        } else if (ageInSeconds <= 55) {
-          timeBucket = "50s";
-        }
-        
-        const bucket = buckets.get(timeBucket);
-        if (bucket) {
-          if (processorName.includes('Stripe')) {
-            bucket.Stripe += 1;
-          } else if (processorName.includes('PayPal')) {
-            bucket.PayPal += 1;
-          } else if (processorName.includes('Square')) {
-            bucket.Square += 1;
-          } else {
-            bucket.Stripe += 1; // Default to Stripe
-          }
-        }
-      });
-      
-      // Create stacked data points
-      const newData: StackedDataPoint[] = TIME_LABELS.map(label => {
-        const bucket = buckets.get(label) || { Stripe: 0, PayPal: 0, Square: 0 };
-        return {
-          time: label,
-          Stripe: bucket.Stripe,
-          PayPal: bucket.PayPal,
-          Square: bucket.Square
-        };
-      });
-      
-      setChartData(newData);
-      lastUpdateRef.current = now;
-    }
-    
-    animationRef.current = requestAnimationFrame(animate);
-  };
-
-  // Start animation
+  // Update chart data when transactions change
   useEffect(() => {
-    animationRef.current = requestAnimationFrame(animate);
-    return () => {
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current);
-      }
-    };
+    const now = Date.now();
+    const timeLabels = ["Now", "10s", "20s", "30s", "40s", "50s"];
+    
+    // Count transactions in each time bucket
+    const counts = timeLabels.map(label => {
+      const bucketStart = timeLabels.indexOf(label) * 10; // 0, 10, 20, 30, 40, 50 seconds ago
+      const bucketEnd = bucketStart + 10;
+      
+      const count = transactions.filter(tx => {
+        const ageInSeconds = (now - new Date(tx.createdAt).getTime()) / 1000;
+        return ageInSeconds >= bucketStart && ageInSeconds < bucketEnd;
+      }).length;
+      
+      return { x: label, y: count };
+    });
+    
+    setChartData([{ id: "transactions", data: counts }]);
   }, [transactions]);
 
   return (
@@ -114,75 +45,60 @@ export default function NivoStreamingChart({ transactions = [] }: NivoStreamingC
         ● LIVE
       </div>
 
-      {/* Nivo Stream Chart - Real-time Stacked Area */}
-      <ResponsiveStream
+      {/* Simple Line Chart */}
+      <ResponsiveLine
         data={chartData}
-        keys={['Stripe', 'PayPal', 'Square']}
-        margin={{ top: 20, right: 30, bottom: 40, left: 50 }}
+        margin={{ top: 20, right: 30, bottom: 40, left: 40 }}
+        xScale={{ type: 'point' }}
+        yScale={{
+          type: 'linear',
+          min: 0,
+          max: 'auto'
+        }}
         axisTop={null}
         axisRight={null}
         axisBottom={{
           tickSize: 5,
           tickPadding: 5,
-          tickRotation: 0,
-          legend: '',
-          legendOffset: 36,
-          legendPosition: 'middle'
+          tickRotation: 0
         }}
         axisLeft={{
           tickSize: 5,
           tickPadding: 5,
           tickRotation: 0,
           legend: 'Transactions',
-          legendOffset: -40,
+          legendOffset: -30,
           legendPosition: 'middle'
         }}
+        pointSize={6}
+        pointColor="#3b82f6"
+        pointBorderWidth={2}
+        pointBorderColor="#ffffff"
+        useMesh={true}
+        curve="monotoneX"
+        lineWidth={3}
+        colors={['#3b82f6']}
+        enableArea={true}
+        areaOpacity={0.2}
         enableGridX={true}
         enableGridY={true}
-        offsetType="none"
-        order="none"
-        curve="monotoneX"
-        colors={['#3b82f6', '#10b981', '#f59e0b']} // Blue for Stripe, Green for PayPal, Orange for Square
-        fillOpacity={0.85}
-        borderWidth={1}
-        borderColor={{ from: 'color', modifiers: [['darker', 0.7]] }}
         animate={false}
         isInteractive={true}
-        tooltip={({ slice }) => {
-          if (!slice || !slice.data) return null;
-          
-          return (
-            <div
-              style={{
-                background: 'white',
-                padding: '12px',
-                border: '1px solid #ccc',
-                borderRadius: '4px',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-              }}
-            >
-              <strong>{slice.data.time || 'Transaction Data'}</strong>
-              <br />
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '8px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <div style={{ width: '12px', height: '12px', backgroundColor: '#3b82f6', borderRadius: '2px' }}></div>
-                  <span>Stripe: {slice.data.Stripe || 0}</span>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <div style={{ width: '12px', height: '12px', backgroundColor: '#10b981', borderRadius: '2px' }}></div>
-                  <span>PayPal: {slice.data.PayPal || 0}</span>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <div style={{ width: '12px', height: '12px', backgroundColor: '#f59e0b', borderRadius: '2px' }}></div>
-                  <span>Square: {slice.data.Square || 0}</span>
-                </div>
-                <div style={{ marginTop: '4px', fontSize: '11px', color: '#666' }}>
-                  Total: {(slice.data.Stripe || 0) + (slice.data.PayPal || 0) + (slice.data.Square || 0)}
-                </div>
-              </div>
-            </div>
-          );
-        }}
+        tooltip={({ point }) => (
+          <div
+            style={{
+              background: 'white',
+              padding: '12px',
+              border: '1px solid #ccc',
+              borderRadius: '4px',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+            }}
+          >
+            <strong>{point.data.x}</strong>
+            <br />
+            Transactions: {point.data.y}
+          </div>
+        )}
         theme={{
           background: 'transparent',
           text: {
@@ -231,7 +147,7 @@ export default function NivoStreamingChart({ transactions = [] }: NivoStreamingC
         fontSize: '12px',
         color: '#64748b'
       }}>
-        Transactions per 5-second interval | Real-time streaming
+        Transaction volume by time period
       </div>
     </div>
   );
