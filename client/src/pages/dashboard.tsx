@@ -353,7 +353,20 @@ export default function Dashboard() {
           <Layout.Section>
             <Card>
               <div style={{ padding: '16px' }}>
-                <Text variant="headingMd" as="h2">Transaction Volume</Text>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <Text variant="headingMd" as="h2">Transaction Volume</Text>
+                  <div style={{
+                    color: '#ef4444',
+                    fontSize: '14px',
+                    fontWeight: 'bold',
+                    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                    padding: '4px 8px',
+                    borderRadius: '4px',
+                    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
+                  }}>
+                    ● LIVE
+                  </div>
+                </div>
                 <div style={{ marginTop: '16px', height: '200px' }}>
                   <RechartsTransactionChart transactions={metrics?.recentTransactions || []} />
                 </div>
