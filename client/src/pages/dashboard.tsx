@@ -209,13 +209,15 @@ export default function Dashboard() {
     
     setAutoMode(true);
     
-    // Generate initial batch immediately
-    generateRandomTransactions();
+    // Generate initial burst of transactions to populate timeline
+    for (let i = 0; i < 20; i++) {
+      setTimeout(() => generateRandomTransactions(), i * 300);
+    }
     
-    // Set up interval for every 2 seconds to avoid rate limits
+    // Set up interval for every 3 seconds to avoid rate limits
     const interval = setInterval(() => {
       generateRandomTransactions();
-    }, 2000);
+    }, 3000);
     
     setAutoInterval(interval);
   };
