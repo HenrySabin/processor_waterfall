@@ -73,6 +73,12 @@ export default function Configuration() {
 
   const recentBlocks = blocksResponse?.blocks || [];
 
+  // Fetch smart contract details
+  const { data: contractDetails, isLoading: contractDetailsLoading } = useQuery({
+    queryKey: ['/api/smart-contract/details'],
+    refetchInterval: 12000, // Refresh every 12 seconds
+  });
+
   // Update processor mutation
   const updateProcessorMutation = useMutation({
     mutationFn: async (processor: ProcessorConfig) => {
@@ -374,6 +380,86 @@ export default function Configuration() {
                 <Text as="p" tone="subdued">
                   Connect to Algorand network to view live blockchain data.
                 </Text>
+              )}
+            </div>
+          </Card>
+        </Layout.Section>
+
+        {/* Smart Contract Details */}
+        <Layout.Section>
+          <Card>
+            <div style={{ padding: '20px' }}>
+              <Text variant="headingMd" as="h2">PayFlow Smart Contract Details</Text>
+              <br />
+              
+              {contractDetailsLoading ? (
+                <Spinner size="large" />
+              ) : (
+                <>
+                  <Text as="p" tone="subdued">
+                    Your deployed PayFlow smart contract on Algorand blockchain.
+                  </Text>
+                  <br />
+                  <br />
+                  
+                  <BlockStack gap="300">
+                    <InlineStack gap="200" align="center">
+                      <Text as="span" fontWeight="bold">Application ID:</Text>
+                      <Badge tone="info" data-testid="badge-app-id">
+                        {contractDetails?.appId?.toLocaleString() || 'N/A'}
+                      </Badge>
+                    </InlineStack>
+                    
+                    {contractDetails?.creator && (
+                      <InlineStack gap="200" align="center">
+                        <Text as="span" fontWeight="bold">Creator Address:</Text>
+                        <Text as="span" fontWeight="mono" data-testid="text-creator-address">
+                          {contractDetails.creator.length > 20 
+                            ? `${contractDetails.creator.substring(0, 20)}...` 
+                            : contractDetails.creator}
+                        </Text>
+                      </InlineStack>
+                    )}
+                    
+                    {contractDetails?.createdAtRound && (
+                      <InlineStack gap="200" align="center">
+                        <Text as="span" fontWeight="bold">Deployed at Round:</Text>
+                        <Text as="span" data-testid="text-deployed-round">
+                          {contractDetails.createdAtRound.toLocaleString()}
+                        </Text>
+                      </InlineStack>
+                    )}
+                    
+                    {contractDetails?.deploymentHash && (
+                      <InlineStack gap="200" align="center">
+                        <Text as="span" fontWeight="bold">Deployment Hash:</Text>
+                        <Text as="span" fontWeight="mono" data-testid="text-deployment-hash">
+                          {contractDetails.deploymentHash.length > 20
+                            ? `${contractDetails.deploymentHash.substring(0, 20)}...`
+                            : contractDetails.deploymentHash}
+                        </Text>
+                      </InlineStack>
+                    )}
+                    
+                    {contractDetails?.globalState && (
+                      <div>
+                        <Text as="p" fontWeight="bold">Global State:</Text>
+                        <br />
+                        <div style={{ 
+                          backgroundColor: '#f6f6f7', 
+                          padding: '12px', 
+                          borderRadius: '4px',
+                          fontFamily: 'monospace',
+                          fontSize: '14px'
+                        }}>
+                          <Text as="pre" data-testid="text-global-state">
+                            {JSON.stringify(contractDetails.globalState, null, 2)}
+                          </Text>
+                        </div>
+                      </div>
+                    )}
+                  </BlockStack>
+                </>
               )}
             </div>
           </Card>

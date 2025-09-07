@@ -400,6 +400,62 @@ export class AlgorandClient {
       throw new Error('Failed to retrieve block hashes');
     }
   }
+
+  async getSmartContractDetails(): Promise<{
+    appId?: number;
+    creator?: string;
+    createdAtRound?: number;
+    globalState?: any;
+    localState?: any;
+    approvalProgram?: string;
+    clearProgram?: string;
+    deploymentHash?: string;
+  }> {
+    if (this.mockMode || !this.config.appId) {
+      return {
+        appId: 999999,
+        creator: "DEMO_CREATOR_ADDRESS_ALGORAND_TESTNET_1234567890",
+        createdAtRound: 55309628,
+        deploymentHash: "DEMO_TX_HASH_ABC123DEF456GHI789JKL012MNO345",
+        globalState: {
+          processor_count: 3,
+          processor_1_name: "Stripe",
+          processor_1_priority: 1,
+          processor_1_enabled: 1,
+          processor_2_name: "PayPal", 
+          processor_2_priority: 2,
+          processor_2_enabled: 1,
+          processor_3_name: "Square",
+          processor_3_priority: 3,
+          processor_3_enabled: 1
+        }
+      };
+    }
+
+    if (!this.algodClient) {
+      throw new Error('Algod client not initialized');
+    }
+
+    try {
+      const appInfo = await this.algodClient.getApplicationByID(this.config.appId).do();
+      
+      return {
+        appId: this.config.appId,
+        creator: appInfo.params?.creator,
+        createdAtRound: appInfo.params?.['created-at-round'],
+        globalState: appInfo.params?.['global-state'],
+        approvalProgram: appInfo.params?.['approval-program'],
+        clearProgram: appInfo.params?.['clear-state-program']
+      };
+    } catch (error) {
+      logger.error(
+        'Failed to retrieve smart contract details',
+        'algorand-client',
+        error instanceof Error ? error : undefined
+      );
+      throw new Error('Failed to retrieve smart contract details');
+    }
+  }
 }
 
 export const algorandClient = new AlgorandClient();

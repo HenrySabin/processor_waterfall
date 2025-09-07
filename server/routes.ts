@@ -352,6 +352,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get('/api/smart-contract/details', async (req, res) => {
+    try {
+      const contractDetails = await algorandClient.getSmartContractDetails();
+      res.json(contractDetails);
+    } catch (error) {
+      logger.error('Error retrieving smart contract details', 'api', error instanceof Error ? error : undefined);
+      res.status(500).json({
+        error: 'Failed to retrieve smart contract details',
+      });
+    }
+  });
+
   // System logs endpoint
   app.get('/api/logs', async (req, res) => {
     try {
