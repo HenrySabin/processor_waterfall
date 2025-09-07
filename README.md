@@ -4,10 +4,18 @@ A production-ready Node.js payment processor system with waterfall routing, circ
 
 Loom Video Explaining How it Works! : https://www.loom.com/share/2c20236ac70a4d48a1ce0794dd579d85?sid=e744ac71-dec4-4962-94e3-fc759880171c
 
+
 Deploy from here: <img width="546" height="350" alt="image" src="https://github.com/user-attachments/assets/851f9f20-24c8-4d4b-b423-4199bc5d2497" />
 
-Demo and system management as well as surge simiulaitno in the top right here: <img width="790" height="130" alt="image" src="https://github.com/user-attachments/assets/b3ef156a-789b-4f59-abfe-6004edfd5e34" />
+Demo and system management as well as surge simulation in the top right here:
 
+
+<img width="790" height="130" alt="image" src="https://github.com/user-attachments/assets/b3ef156a-789b-4f59-abfe-6004edfd5e34" />
+
+
+Use switches to toggle processors as needed:
+
+<img width="1852" height="1084" alt="image" src="https://github.com/user-attachments/assets/6ab2e834-bcf1-4383-b2f9-4ba6eb0c5948" />
 
 
 ## Features
