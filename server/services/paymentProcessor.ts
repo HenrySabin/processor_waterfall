@@ -1,5 +1,5 @@
 import { storage } from "../storage";
-import { logger } from "../utils/logger";
+import { logger, LogLevel } from "../utils/logger";
 import { circuitBreaker } from "./circuitBreaker";
 import { algorandClient } from "./algorandClient";
 import { StripeAdapter } from "../adapters/stripeAdapter";

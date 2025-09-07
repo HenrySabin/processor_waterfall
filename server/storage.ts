@@ -126,11 +126,19 @@ export class MemStorage implements IStorage {
     const id = randomUUID();
     const now = new Date();
     const processor: Processor = {
-      ...insertProcessor,
+      name: insertProcessor.name,
+      type: insertProcessor.type,
+      priority: insertProcessor.priority || 1,
+      enabled: insertProcessor.enabled !== undefined ? insertProcessor.enabled : true,
+      successRate: insertProcessor.successRate || "100.00",
+      responseTime: insertProcessor.responseTime || 250,
+      config: insertProcessor.config || {},
+      circuitBreakerOpen: insertProcessor.circuitBreakerOpen || false,
+      consecutiveFailures: insertProcessor.consecutiveFailures || 0,
+      lastFailureTime: insertProcessor.lastFailureTime || null,
       id,
       createdAt: now,
       updatedAt: now,
-      lastFailureTime: null,
     };
     this.processors.set(id, processor);
     return processor;
@@ -172,7 +180,13 @@ export class MemStorage implements IStorage {
     const id = randomUUID();
     const now = new Date();
     const transaction: Transaction = {
-      ...insertTransaction,
+      amount: insertTransaction.amount,
+      currency: insertTransaction.currency || "USD",
+      status: insertTransaction.status,
+      processorId: insertTransaction.processorId || null,
+      failureReason: insertTransaction.failureReason || null,
+      attemptedProcessors: insertTransaction.attemptedProcessors || [],
+      metadata: insertTransaction.metadata || {},
       id,
       createdAt: now,
       updatedAt: now,
@@ -207,7 +221,11 @@ export class MemStorage implements IStorage {
   async createHealthMetric(insertMetric: InsertHealthMetric): Promise<HealthMetric> {
     const id = randomUUID();
     const metric: HealthMetric = {
-      ...insertMetric,
+      processorId: insertMetric.processorId,
+      successCount: insertMetric.successCount || 0,
+      failureCount: insertMetric.failureCount || 0,
+      avgResponseTime: insertMetric.avgResponseTime || "0.00",
+      totalTransactions: insertMetric.totalTransactions || 0,
       id,
       timestamp: new Date(),
     };
@@ -218,7 +236,7 @@ export class MemStorage implements IStorage {
   async getLatestHealthMetrics(): Promise<HealthMetric[]> {
     const latestMetrics = new Map<string, HealthMetric>();
     
-    for (const metric of this.healthMetrics.values()) {
+    for (const metric of Array.from(this.healthMetrics.values())) {
       const existing = latestMetrics.get(metric.processorId);
       if (!existing || new Date(metric.timestamp) > new Date(existing.timestamp)) {
         latestMetrics.set(metric.processorId, metric);
@@ -232,7 +250,12 @@ export class MemStorage implements IStorage {
   async createSystemLog(insertLog: InsertSystemLog): Promise<SystemLog> {
     const id = randomUUID();
     const log: SystemLog = {
-      ...insertLog,
+      level: insertLog.level,
+      message: insertLog.message,
+      service: insertLog.service,
+      transactionId: insertLog.transactionId || null,
+      processorId: insertLog.processorId || null,
+      metadata: insertLog.metadata || {},
       id,
       timestamp: new Date(),
     };
