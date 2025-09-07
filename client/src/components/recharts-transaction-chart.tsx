@@ -1,13 +1,15 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import type { Transaction } from "@/lib/api";
 
 interface RechartsTransactionChartProps {
   transactions?: Transaction[];
+  mode?: 'realtime' | 'flowing';
 }
 
-export default function RechartsTransactionChart({ transactions = [] }: RechartsTransactionChartProps) {
+export default function RechartsTransactionChart({ transactions = [], mode = 'realtime' }: RechartsTransactionChartProps) {
   const [chartData, setChartData] = useState<Array<{name: string, count: number}>>([]);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Initialize chart with reversed time labels (newest on right, oldest on left)
   const timeLabels = [
@@ -36,34 +38,109 @@ export default function RechartsTransactionChart({ transactions = [] }: Recharts
   // Removed calculateNewestBucketCount to avoid closure issues
   // Now calculating fresh data directly in the shifting animation
 
-  // Initialize chart data when transactions arrive - flowing animation will handle updates
+  // Mode-specific chart logic
   useEffect(() => {
     if (!transactions || transactions.length === 0) {
       console.log('🔄 Chart waiting for transactions...');
       return;
     }
     
-    console.log('🔄 Chart initializing with transactions:', transactions.length, 'transactions');
+    console.log(`🔄 Chart initializing in ${mode} mode with ${transactions.length} transactions`);
     
-    const now = Date.now();
-    const initialData = timeLabels.map(timeSlot => {
-      const count = transactions.filter(tx => {
-        const ageInSeconds = (now - new Date(tx.createdAt).getTime()) / 1000;
-        return ageInSeconds >= timeSlot.rangeStart && ageInSeconds < timeSlot.rangeEnd;
-      }).length;
+    if (mode === 'realtime') {
+      // REAL-TIME MODE: Recalculate all buckets based on actual transaction ages
+      const now = Date.now();
+      const initialData = timeLabels.map(timeSlot => {
+        const count = transactions.filter(tx => {
+          const ageInSeconds = (now - new Date(tx.createdAt).getTime()) / 1000;
+          return ageInSeconds >= timeSlot.rangeStart && ageInSeconds < timeSlot.rangeEnd;
+        }).length;
+        
+        return {
+          name: timeSlot.label,
+          count: count
+        };
+      });
       
-      return {
+      console.log('📊 Real-time chart data:', initialData.map(d => `${d.name}:${d.count}`).join(', '));
+      setChartData(initialData);
+      
+    } else if (mode === 'flowing') {
+      // FLOWING MODE: Initialize buckets, then set up conveyor belt animation
+      const initialData = timeLabels.map(timeSlot => ({
         name: timeSlot.label,
-        count: count
-      };
-    });
-    
-    console.log('📈 Initial chart data:', initialData.map(d => `${d.name}:${d.count}`).join(', '));
-    setChartData(initialData);
-  }, [transactions]); // ← Re-run when transactions change
+        count: 0
+      }));
+      
+      // Add current transactions to appropriate buckets
+      const now = Date.now();
+      transactions.forEach(tx => {
+        const ageInSeconds = (now - new Date(tx.createdAt).getTime()) / 1000;
+        const bucketIndex = timeLabels.findIndex(slot => 
+          ageInSeconds >= slot.rangeStart && ageInSeconds < slot.rangeEnd
+        );
+        if (bucketIndex !== -1) {
+          initialData[bucketIndex].count++;
+        }
+      });
+      
+      console.log('🚀 Flowing chart initialized:', initialData.map(d => `${d.name}:${d.count}`).join(', '));
+      setChartData(initialData);
+    }
+  }, [transactions, mode]);
 
-  // Removed shifting animation - caused jarring jumps
-  // Now relying entirely on real-time data calculation which works correctly
+  // FLOWING MODE: Set up conveyor belt animation
+  useEffect(() => {
+    if (mode !== 'flowing') {
+      // Clean up any existing intervals when not in flowing mode
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+      return;
+    }
+
+    // Clean up any existing intervals
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+    }
+
+    intervalRef.current = setInterval(() => {
+      console.log('🚀 Flowing: Shifting data left');
+      setChartData(prevData => {
+        if (prevData.length === 0) return prevData;
+        
+        // STEP 1: Shift all data one position left (older)
+        const shiftedData = prevData.map((item, index) => {
+          if (index === 0) {
+            // Leftmost bucket gets cleared (oldest data ages out)
+            return { ...item, count: 0 };
+          } else {
+            // Each bucket takes the value from the bucket to its right
+            return { ...item, count: prevData[index - 1].count };
+          }
+        });
+        
+        // STEP 2: Add NEW real-time data to rightmost bucket (newest)
+        const now = Date.now();
+        const newestCount = transactions.filter(tx => {
+          const ageInSeconds = (now - new Date(tx.createdAt).getTime()) / 1000;
+          return ageInSeconds >= 0 && ageInSeconds < 0.5;
+        }).length;
+        
+        console.log('🚀 Adding to rightmost bucket:', newestCount);
+        shiftedData[shiftedData.length - 1].count = newestCount;
+        
+        return shiftedData;
+      });
+    }, 500); // Shift every 0.5 seconds
+    
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+    };
+  }, [mode, transactions]); // Re-run when mode or transactions change
 
   return (
     <div style={{ position: 'relative', height: '200px' }} data-testid="recharts-transaction-chart">
@@ -142,7 +219,9 @@ export default function RechartsTransactionChart({ transactions = [] }: Recharts
         <span style={{ color: '#64748b' }}>Old</span>
         <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
           <span style={{ color: '#ef4444', fontSize: '14px' }}>←←←</span>
-          <span style={{ fontWeight: '500' }}>Real-time Flow</span>
+          <span style={{ fontWeight: '500' }}>
+            {mode === 'realtime' ? 'Real-time Data' : 'Conveyor Flow'}
+          </span>
           <span style={{ color: '#ef4444', fontSize: '14px' }}>←←←</span>
         </div>
         <span style={{ color: '#1d4ed8', fontWeight: '600' }}>New</span>
@@ -157,7 +236,10 @@ export default function RechartsTransactionChart({ transactions = [] }: Recharts
         fontSize: '12px',
         color: '#64748b'
       }}>
-        Live Transaction Timeline | Flowing Left
+        {mode === 'realtime' 
+          ? 'Live Transaction Timeline | Real-time Accuracy' 
+          : 'Live Transaction Timeline | Flowing Movement'
+        }
       </div>
     </div>
   );
