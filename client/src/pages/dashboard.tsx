@@ -7,6 +7,7 @@ import ProcessorStatus from "@/components/processor-status";
 import RecentTransactions from "@/components/recent-transactions";
 import SystemHealth from "@/components/system-health";
 import QuickActions from "@/components/quick-actions";
+import TransactionChart from "@/components/transaction-chart";
 
 export default function Dashboard() {
   const { data: metrics, isLoading } = useQuery({
@@ -40,14 +41,8 @@ export default function Dashboard() {
           
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
             <div className="bg-card p-6 rounded-lg shadow-sm border border-border">
-              <h3 className="text-lg font-semibold text-foreground mb-4">Transaction Volume (Last 24h)</h3>
-              <div className="h-[200px] bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center text-white">
-                <div className="text-center">
-                  <i className="fas fa-chart-line text-4xl mb-2"></i>
-                  <p>Chart visualization will be implemented here</p>
-                  <p className="text-sm opacity-75">Real-time transaction volume trends</p>
-                </div>
-              </div>
+              <h3 className="text-lg font-semibold text-foreground mb-4">Transaction Volume (Last 12h)</h3>
+              <TransactionChart transactions={metrics?.recentTransactions} />
             </div>
             
             <ProcessorStatus processors={metrics?.processors} />
