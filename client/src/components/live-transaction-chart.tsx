@@ -116,12 +116,13 @@ export default function LiveTransactionChart({ transactions = [] }: LiveTransact
       })
       .map(point => {
         const age = currentTime - point.timestamp;
-        // Flow from left to right: newer data on right, older on left
+        // Flow from right to left: apply time offset for continuous movement
         const baseX = chartWidth - (age * PIXELS_PER_SECOND / 1000);
+        const flowOffset = (timeOffsetRef.current % (chartWidth)) - chartWidth;
         
         return {
           ...point,
-          x: padding.left + baseX,
+          x: padding.left + baseX + flowOffset,
           y: padding.top + chartHeight - (point.count / maxCount) * chartHeight
         };
       })
@@ -214,18 +215,19 @@ export default function LiveTransactionChart({ transactions = [] }: LiveTransact
       ctx.fillText(value.toString(), padding.left - 10, y);
     }
 
-    // Draw static X-axis time labels
+    // Draw flowing X-axis time labels
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
     
     const labelSpacing = 120; // Pixels between time labels
-    const numLabels = Math.floor(chartWidth / labelSpacing) + 1;
+    const flowOffset = (timeOffsetRef.current % labelSpacing);
     
-    for (let i = 0; i < numLabels; i++) {
-      const x = padding.left + i * labelSpacing;
-      if (x <= padding.left + chartWidth) {
-        // Calculate time for this position (going backwards from current time)
-        const secondsBack = ((chartWidth - (x - padding.left)) / PIXELS_PER_SECOND);
+    for (let i = -1; i <= Math.ceil(chartWidth / labelSpacing) + 1; i++) {
+      const x = padding.left + i * labelSpacing + flowOffset;
+      if (x >= padding.left - 50 && x <= padding.left + chartWidth + 50) {
+        // Calculate time for this position
+        const pixelsFromRight = chartWidth - (x - padding.left);
+        const secondsBack = pixelsFromRight / PIXELS_PER_SECOND;
         const timeAtPosition = currentTime - (secondsBack * 1000);
         const timeLabel = format(new Date(timeAtPosition), 'HH:mm:ss');
         ctx.fillText(timeLabel, x, padding.top + chartHeight + 10);
