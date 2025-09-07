@@ -351,7 +351,10 @@ export default function Dashboard() {
       <Page title="Payment Dashboard" subtitle="Monitor your payment processor waterfall system">
         <Layout>
           <Layout.Section>
-            <MetricsGrid stats={wsData.metrics?.stats || {}} />
+            <MetricsGrid 
+              stats={wsData.metrics?.stats || {}} 
+              transactions={wsData.transactions?.transactions || wsData.metrics?.recentTransactions || []}
+            />
           </Layout.Section>
           
           <Layout.Section>

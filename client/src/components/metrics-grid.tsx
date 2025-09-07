@@ -1,11 +1,12 @@
 import { Card, Text, SkeletonBodyText } from "@shopify/polaris";
-import type { SystemStats } from "@/lib/api";
+import type { SystemStats, Transaction } from "@/lib/api";
 
 interface MetricsGridProps {
   stats?: SystemStats;
+  transactions?: Transaction[];
 }
 
-export default function MetricsGrid({ stats }: MetricsGridProps) {
+export default function MetricsGrid({ stats, transactions = [] }: MetricsGridProps) {
   if (!stats) {
     return (
       <div style={{ 
@@ -14,7 +15,7 @@ export default function MetricsGrid({ stats }: MetricsGridProps) {
         gap: '20px', 
         marginBottom: '32px' 
       }}>
-        {[...Array(4)].map((_, i) => (
+        {[...Array(5)].map((_, i) => (
           <Card key={i}>
             <div style={{ padding: '16px' }}>
               <SkeletonBodyText lines={1} />
@@ -35,7 +36,31 @@ export default function MetricsGrid({ stats }: MetricsGridProps) {
     return new Intl.NumberFormat().format(num);
   };
 
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(amount);
+  };
+
+  // Calculate total amount processed from successful transactions
+  const totalAmountProcessed = transactions
+    .filter(t => t.status === 'success')
+    .reduce((total, transaction) => {
+      const amount = parseFloat(transaction.amount);
+      return total + (isNaN(amount) ? 0 : amount);
+    }, 0);
+
   const metrics = [
+    {
+      title: "Total Amount Processed",
+      value: formatCurrency(totalAmountProcessed),
+      change: totalAmountProcessed > 100000 ? "🚀 High volume processing" : "📈 Processing payments",
+      color: "#059669",
+      testId: "metric-total-amount",
+    },
     {
       title: "Total Transactions",
       value: formatNumber(stats.totalTransactions),
@@ -59,7 +84,7 @@ export default function MetricsGrid({ stats }: MetricsGridProps) {
     },
     {
       title: "Active Processors",
-      value: `${stats.activeProcessors}/3`,
+      value: `${stats.activeProcessors}/57`,
       change: "All systems operational",
       color: "#16a34a",
       testId: "metric-active-processors",
