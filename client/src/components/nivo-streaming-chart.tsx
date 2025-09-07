@@ -1,37 +1,80 @@
 import { useEffect, useState } from "react";
-import { ResponsiveLine } from "@nivo/line";
+import FusionCharts from "fusioncharts";
+import Charts from "fusioncharts/fusioncharts.charts";
+import ReactFusionCharts from "react-fusioncharts";
 import type { Transaction } from "@/lib/api";
 
-interface SimpleChartProps {
+// Initialize FusionCharts with required modules
+Charts(FusionCharts);
+
+interface FusionStreamingChartProps {
   transactions?: Transaction[];
 }
 
-export default function NivoStreamingChart({ transactions = [] }: SimpleChartProps) {
-  const [chartData, setChartData] = useState<any[]>([]);
+export default function NivoStreamingChart({ transactions = [] }: FusionStreamingChartProps) {
+  const [chartData, setChartData] = useState<any>({
+    chart: {
+      caption: "Transaction Volume",
+      subCaption: "Live transaction monitoring",
+      xAxisName: "Time Period",
+      yAxisName: "Transaction Count",
+      numberSuffix: "",
+      theme: "fusion",
+      paletteColors: "#3b82f6",
+      bgColor: "#ffffff",
+      showCanvasBorder: "0",
+      usePlotGradientColor: "0",
+      plotBorderAlpha: "10",
+      placeValuesInside: "0",
+      valueFontColor: "#333333",
+      showHoverEffect: "1"
+    },
+    data: []
+  });
 
   // Update chart data when transactions change
   useEffect(() => {
     const now = Date.now();
-    const timeLabels = ["Now", "10s", "20s", "30s", "40s", "50s"];
+    const timeLabels = [
+      { label: "Now", seconds: 0 },
+      { label: "10s ago", seconds: 10 },
+      { label: "20s ago", seconds: 20 },
+      { label: "30s ago", seconds: 30 },
+      { label: "40s ago", seconds: 40 },
+      { label: "50s ago", seconds: 50 }
+    ];
     
     // Count transactions in each time bucket
-    const counts = timeLabels.map(label => {
-      const bucketStart = timeLabels.indexOf(label) * 10; // 0, 10, 20, 30, 40, 50 seconds ago
-      const bucketEnd = bucketStart + 10;
-      
+    const data = timeLabels.map(timeSlot => {
       const count = transactions.filter(tx => {
         const ageInSeconds = (now - new Date(tx.createdAt).getTime()) / 1000;
-        return ageInSeconds >= bucketStart && ageInSeconds < bucketEnd;
+        const rangeStart = timeSlot.seconds;
+        const rangeEnd = timeSlot.seconds + 10;
+        return ageInSeconds >= rangeStart && ageInSeconds < rangeEnd;
       }).length;
       
-      return { x: label, y: count };
+      return {
+        label: timeSlot.label,
+        value: count.toString()
+      };
     });
     
-    setChartData([{ id: "transactions", data: counts }]);
+    setChartData(prev => ({
+      ...prev,
+      data: data
+    }));
   }, [transactions]);
 
+  const chartConfigs = {
+    type: "column2d",
+    width: "100%",
+    height: "180",
+    dataFormat: "json",
+    dataSource: chartData
+  };
+
   return (
-    <div style={{ position: 'relative', height: '200px' }} data-testid="nivo-streaming-chart">
+    <div style={{ position: 'relative', height: '200px' }} data-testid="fusion-streaming-chart">
       {/* Live indicator */}
       <div style={{
         position: 'absolute',
@@ -45,98 +88,8 @@ export default function NivoStreamingChart({ transactions = [] }: SimpleChartPro
         ● LIVE
       </div>
 
-      {/* Simple Line Chart */}
-      <ResponsiveLine
-        data={chartData}
-        margin={{ top: 20, right: 30, bottom: 40, left: 40 }}
-        xScale={{ type: 'point' }}
-        yScale={{
-          type: 'linear',
-          min: 0,
-          max: 'auto'
-        }}
-        axisTop={null}
-        axisRight={null}
-        axisBottom={{
-          tickSize: 5,
-          tickPadding: 5,
-          tickRotation: 0
-        }}
-        axisLeft={{
-          tickSize: 5,
-          tickPadding: 5,
-          tickRotation: 0,
-          legend: 'Transactions',
-          legendOffset: -30,
-          legendPosition: 'middle'
-        }}
-        pointSize={6}
-        pointColor="#3b82f6"
-        pointBorderWidth={2}
-        pointBorderColor="#ffffff"
-        useMesh={true}
-        curve="monotoneX"
-        lineWidth={3}
-        colors={['#3b82f6']}
-        enableArea={true}
-        areaOpacity={0.2}
-        enableGridX={true}
-        enableGridY={true}
-        animate={false}
-        isInteractive={true}
-        tooltip={({ point }) => (
-          <div
-            style={{
-              background: 'white',
-              padding: '12px',
-              border: '1px solid #ccc',
-              borderRadius: '4px',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-            }}
-          >
-            <strong>{point.data.x}</strong>
-            <br />
-            Transactions: {point.data.y}
-          </div>
-        )}
-        theme={{
-          background: 'transparent',
-          text: {
-            fontSize: 12,
-            fill: '#64748b'
-          },
-          axis: {
-            domain: {
-              line: {
-                stroke: '#e2e8f0',
-                strokeWidth: 1
-              }
-            },
-            legend: {
-              text: {
-                fontSize: 12,
-                fill: '#64748b'
-              }
-            },
-            ticks: {
-              line: {
-                stroke: '#e2e8f0',
-                strokeWidth: 1
-              },
-              text: {
-                fontSize: 11,
-                fill: '#64748b'
-              }
-            }
-          },
-          grid: {
-            line: {
-              stroke: '#f1f5f9',
-              strokeWidth: 1
-            }
-          }
-        }}
-      />
+      {/* FusionCharts Column Chart */}
+      <ReactFusionCharts {...chartConfigs} />
 
       {/* Chart info */}
       <div style={{
@@ -147,7 +100,7 @@ export default function NivoStreamingChart({ transactions = [] }: SimpleChartPro
         fontSize: '12px',
         color: '#64748b'
       }}>
-        Transaction volume by time period
+        Transaction volume by time period | FusionCharts
       </div>
     </div>
   );
