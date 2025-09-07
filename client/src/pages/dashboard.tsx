@@ -162,45 +162,33 @@ export default function Dashboard() {
     }
   };
 
-  // Automated transaction generation
+  // Automated transaction generation - much more conservative
   const generateRandomTransactions = async () => {
-    const transactionCount = Math.floor(Math.random() * 3) + 1; // 1-3 transactions
-    
     const customers = [
       "Alice Johnson", "Bob Smith", "Carol Davis", "David Wilson", "Eva Brown",
-      "Frank Miller", "Grace Lee", "Henry Chang", "Ivy Martinez", "Jack Thompson",
-      "Kelly Anderson", "Liam Rodriguez", "Maya Patel", "Nathan Kim", "Olivia Green",
-      "Paul Walker", "Quinn Taylor", "Rachel White", "Sam Johnson", "Tina Liu"
+      "Frank Miller", "Grace Lee", "Henry Chang", "Ivy Martinez", "Jack Thompson"
     ];
     
     const products = [
-      "Premium Plan", "Enterprise License", "Monthly Subscription", "Basic Plan", "Yearly Premium",
-      "Pro Tools", "Monthly Pro", "Team License", "Standard Plan", "Annual Pro"
+      "Premium Plan", "Enterprise License", "Monthly Subscription", "Basic Plan", "Yearly Premium"
     ];
 
-    // Generate transactions with random timing within 2 seconds
-    for (let i = 0; i < transactionCount; i++) {
-      const delay = Math.random() * 2000; // Random delay 0-2 seconds
+    // Generate just 1 transaction per call to avoid rate limits
+    const amount = (Math.random() * 800 + 15).toFixed(2);
+    const customer = customers[Math.floor(Math.random() * customers.length)];
+    const product = products[Math.floor(Math.random() * products.length)];
+    
+    try {
+      await api.processPayment({
+        amount,
+        currency: "USD",
+        metadata: { auto: true, customer, product }
+      });
       
-      setTimeout(async () => {
-        const amount = (Math.random() * 800 + 15).toFixed(2);
-        const customer = customers[Math.floor(Math.random() * customers.length)];
-        const product = products[Math.floor(Math.random() * products.length)];
-        
-        try {
-          await api.processPayment({
-            amount,
-            currency: "USD",
-            metadata: { auto: true, customer, product }
-          });
-          
-          // Invalidate queries to refresh the UI
-          queryClient.invalidateQueries({ queryKey: ['/api/metrics'] });
-          queryClient.invalidateQueries({ queryKey: ['/api/health'] });
-        } catch (error) {
-          // Silent fail for auto-generated transactions
-        }
-      }, delay);
+      // Invalidate queries to refresh the UI
+      queryClient.invalidateQueries({ queryKey: ['/api/metrics'] });
+    } catch (error) {
+      // Silent fail for auto-generated transactions
     }
   };
 
@@ -209,15 +197,13 @@ export default function Dashboard() {
     
     setAutoMode(true);
     
-    // Generate initial burst of transactions to populate timeline
-    for (let i = 0; i < 20; i++) {
-      setTimeout(() => generateRandomTransactions(), i * 300);
-    }
+    // Generate initial transaction immediately
+    generateRandomTransactions();
     
-    // Set up interval for every 3 seconds to avoid rate limits
+    // Set up interval for every 5 seconds - very conservative
     const interval = setInterval(() => {
       generateRandomTransactions();
-    }, 3000);
+    }, 5000);
     
     setAutoInterval(interval);
   };
