@@ -340,6 +340,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get('/api/blockchain/blocks', async (req, res) => {
+    try {
+      const blockHashes = await algorandClient.getRecentBlockHashes();
+      res.json({ blocks: blockHashes });
+    } catch (error) {
+      logger.error('Error retrieving block hashes', 'api', error instanceof Error ? error : undefined);
+      res.status(500).json({
+        error: 'Failed to retrieve block hashes',
+      });
+    }
+  });
+
   // System logs endpoint
   app.get('/api/logs', async (req, res) => {
     try {

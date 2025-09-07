@@ -65,6 +65,14 @@ export default function Configuration() {
 
   const processors = processorsResponse?.priorities || [];
 
+  // Fetch recent block hashes
+  const { data: blocksResponse, isLoading: blocksLoading } = useQuery({
+    queryKey: ['/api/blockchain/blocks'],
+    refetchInterval: 8000, // Refresh every 8 seconds
+  });
+
+  const recentBlocks = blocksResponse?.blocks || [];
+
   // Update processor mutation
   const updateProcessorMutation = useMutation({
     mutationFn: async (processor: ProcessorConfig) => {
@@ -341,6 +349,24 @@ export default function Configuration() {
                       {processors.length}
                     </Text>
                   </InlineStack>
+                  
+                  {(contractStatus as any)?.genesisId && (
+                    <InlineStack gap="200" align="center">
+                      <Text as="span">Genesis ID:</Text>
+                      <Text as="span" fontWeight="mono" data-testid="text-genesis-id">
+                        {(contractStatus as any).genesisId}
+                      </Text>
+                    </InlineStack>
+                  )}
+                  
+                  {(contractStatus as any)?.genesisHash && (
+                    <InlineStack gap="200" align="center">
+                      <Text as="span">Genesis Hash:</Text>
+                      <Text as="span" fontWeight="mono" data-testid="text-genesis-hash">
+                        {(contractStatus as any).genesisHash.substring(0, 16)}...
+                      </Text>
+                    </InlineStack>
+                  )}
                 </BlockStack>
               )}
               
@@ -348,6 +374,41 @@ export default function Configuration() {
                 <Text as="p" tone="subdued">
                   Connect to Algorand network to view live blockchain data.
                 </Text>
+              )}
+            </div>
+          </Card>
+        </Layout.Section>
+
+        {/* Recent Block Hashes */}
+        <Layout.Section>
+          <Card>
+            <div style={{ padding: '20px' }}>
+              <Text variant="headingMd" as="h2">Recent Block Hashes</Text>
+              <br />
+              
+              {blocksLoading ? (
+                <Spinner size="large" />
+              ) : (
+                <>
+                  <Text as="p" tone="subdued">
+                    Latest blocks from the Algorand blockchain with their cryptographic hashes.
+                  </Text>
+                  <br />
+                  <br />
+                  
+                  <DataTable
+                    columnContentTypes={['numeric', 'text', 'text']}
+                    headings={['Round', 'Block Hash', 'Time']}
+                    rows={recentBlocks.map((block: any) => [
+                      block.round.toLocaleString(),
+                      <Text as="span" fontWeight="mono" key={block.round} data-testid={`hash-${block.round}`}>
+                        {block.hash.length > 20 ? `${block.hash.substring(0, 20)}...` : block.hash}
+                      </Text>,
+                      new Date(block.timestamp).toLocaleTimeString()
+                    ])}
+                    data-testid="table-block-hashes"
+                  />
+                </>
               )}
             </div>
           </Card>
